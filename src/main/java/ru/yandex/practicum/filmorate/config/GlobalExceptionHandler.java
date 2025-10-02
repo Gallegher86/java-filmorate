@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.http.ResponseEntity;
 
+import org.springframework.web.servlet.NoHandlerFoundException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 
 import java.util.HashMap;
@@ -36,6 +37,14 @@ public class GlobalExceptionHandler {
         body.put("details", errors);
         body.put("errorCode", HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(NoHandlerFoundException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("errorMessage", "Ресурс по указанному пути не найден.");
+        body.put("errorCode", HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
     @ExceptionHandler(Exception.class)
