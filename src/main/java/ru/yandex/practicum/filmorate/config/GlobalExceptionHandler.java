@@ -46,7 +46,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<Map<String, Object>> ResourceNotFound(NoResourceFoundException ex) {
+    public ResponseEntity<Map<String, Object>> resourceNotFound(NoResourceFoundException ex) {
         String pathErrorMessage = String.format("Ресурс по пути %s не найден.", ex.getResourcePath());
         log.warn(pathErrorMessage);
 
