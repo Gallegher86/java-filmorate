@@ -27,19 +27,24 @@ public class UserController {
 
     @GetMapping
     public List findAll() {
+        log.info("Получен запрос на получение списка пользователей.");
         return new ArrayList<>(users.values());
     }
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
+        log.info("Получен запрос на добавление пользователя с логином {}.", user.getLogin());
         long id = generateNextId();
+        log.trace("Сгенерирован новый id для пользователя {}", id);
         user.setId(id);
         users.put(id, user);
+        log.info("Пользователь с логином {} с id {} добавлен в список.", user.getLogin(), user.getId());
         return user;
     }
 
     @PutMapping
     public User update(@Valid @RequestBody User newUser) {
+        log.info("Получен запрос на обновление пользователя с логином {} с id {}.", newUser.getLogin(), newUser.getId());
         Long id = newUser.getId();
 
         User oldUser = users.get(id);
@@ -49,6 +54,7 @@ public class UserController {
         }
 
         users.put(id, newUser);
+        log.info("Обновленный пользователь с логином {} с id {} добавлен в список.", newUser.getLogin(), newUser.getId());
         return newUser;
     }
 
