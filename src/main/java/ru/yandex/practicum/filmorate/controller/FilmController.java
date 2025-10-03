@@ -27,19 +27,24 @@ public class FilmController {
 
     @GetMapping
     public List<Film> findAll() {
+        log.info("Получен запрос на получение списка фильмов.");
         return new ArrayList<>(films.values());
     }
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
+        log.info("Получен запрос на добавление фильма {}.", film.getName());
         long id = generateNextId();
+        log.trace("Сгенерирован новый id для фильма {}", id);
         film.setId(id);
         films.put(id, film);
+        log.info("Фильм {} с id {} помещен  в коллекцию.", film.getName(), film.getId());
         return film;
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film newFilm) {
+        log.info("Получен запрос на обновление фильма {} с id {}.", newFilm.getName(), newFilm.getId());
         Long id = newFilm.getId();
 
         Film oldFilm = films.get(id);
@@ -49,6 +54,7 @@ public class FilmController {
         }
 
         films.put(id, newFilm);
+        log.info("Обновленный фильм {} с id {} помещен  в коллекцию.", newFilm.getName(), newFilm.getId());
         return newFilm;
     }
 
