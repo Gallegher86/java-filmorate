@@ -26,7 +26,7 @@ public class UserController {
     private Long idCounter = 1L;
 
     @GetMapping
-    public List findAll() {
+    public List<User> findAll() {
         log.info("Получен запрос на получение списка пользователей.");
         return new ArrayList<>(users.values());
     }
