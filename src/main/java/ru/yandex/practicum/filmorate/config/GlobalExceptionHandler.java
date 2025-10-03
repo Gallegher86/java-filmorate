@@ -19,7 +19,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFoundException(NotFoundException ex) {
-        log.warn("Ресурс не найден: {}.", ex.getMessage());
+        log.warn("Ресурс не найден: {}", ex.getMessage());
 
         Map<String, Object> body = new HashMap<>();
         body.put("errorMessage", ex.getMessage());
