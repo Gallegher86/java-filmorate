@@ -55,6 +55,11 @@ public class FilmController {
         return newFilm;
     }
 
+    public void clear() {
+        films.clear();
+        idCounter = 1L;
+    }
+
     private Long generateNextId() {
         return idCounter++;
     }
