@@ -107,7 +107,7 @@ class FilmControllerTest {
     }
 
     @Test
-    public void mustReturn400OnValidationErrors() throws Exception {
+    public void mustReturn400IfValidationErrorsFound() throws Exception {
         Film emptyNameFilm = film.toBuilder()
                 .name("")
                 .build();
