@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
 
-@Builder
+@Builder (toBuilder = true)
 @Getter
 @Setter
 @ToString

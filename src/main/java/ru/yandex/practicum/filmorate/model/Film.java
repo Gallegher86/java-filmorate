@@ -13,7 +13,7 @@ import ru.yandex.practicum.filmorate.validation.annotation.ValidReleaseDate;
 
 import java.time.LocalDate;
 
-@Builder
+@Builder (toBuilder = true)
 @Getter
 @Setter
 @ToString
