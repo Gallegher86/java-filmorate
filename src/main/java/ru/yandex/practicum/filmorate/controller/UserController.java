@@ -55,6 +55,11 @@ public class UserController {
         return newUser;
     }
 
+    public void clear() {
+        users.clear();
+        idCounter = 1L;
+    }
+
     private Long generateNextId() {
         return idCounter++;
     }
