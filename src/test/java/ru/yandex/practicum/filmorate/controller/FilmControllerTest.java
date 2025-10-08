@@ -120,7 +120,7 @@ class FilmControllerTest {
                 "description: Описание фильма должно включать не более двухсот символов.");
 
         Film earlyReleaseDateFilm = film.toBuilder()
-                .releaseDate(LocalDate.of(1895, 12,27))
+                .releaseDate(LocalDate.of(1895, 12, 27))
                 .build();
         checkValidation(earlyReleaseDateFilm,
                 "releaseDate: Дата выпуска фильма не может быть раньше 28.12.1895.");
