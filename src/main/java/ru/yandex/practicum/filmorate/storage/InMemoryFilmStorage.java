@@ -5,18 +5,22 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Objects;
 
 @Slf4j
 @Component
-public class InMemoryFilmStorage implements FilmStorage{
+public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
     private Long idCounter = 1L;
 
     @Override
     public List<Film> findAll() {
         return new ArrayList<>(films.values());
-    };
+    }
 
     @Override
     public Film create(Film film) {
@@ -26,7 +30,7 @@ public class InMemoryFilmStorage implements FilmStorage{
         films.put(id, film);
         log.info("Фильм {} с id {} помещен  в коллекцию.", film.getName(), film.getId());
         return film;
-    };
+    }
 
     @Override
     public Film update(Film newFilm) {
@@ -41,7 +45,7 @@ public class InMemoryFilmStorage implements FilmStorage{
         films.put(id, newFilm);
         log.info("Обновленный фильм {} с id {} помещен  в коллекцию.", newFilm.getName(), newFilm.getId());
         return newFilm;
-    };
+    }
 
     public void clear() {
         films.clear();
