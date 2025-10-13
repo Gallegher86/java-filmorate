@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
 
@@ -20,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class UserControllerTest {
     @Autowired
-    private UserController userController;
+    private UserService userService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -37,7 +38,7 @@ class UserControllerTest {
 
     @BeforeEach
     public void clear() {
-        userController.clear();
+        userService.clear();
     }
 
     @Test
