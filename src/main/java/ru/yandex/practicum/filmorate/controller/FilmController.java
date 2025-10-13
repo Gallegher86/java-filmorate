@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.List;
@@ -16,28 +17,24 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/films")
 public class FilmController {
-    private final FilmStorage filmStorage;
+    private final FilmService filmService;
 
     @GetMapping
     public List<Film> findAll() {
         log.info("Получен запрос на получение списка фильмов.");
-        return filmStorage.findAll();
+        return filmService.findAll();
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Film create(@Valid @RequestBody Film film) {
         log.info("Получен запрос на добавление фильма {}.", film.getName());
-        return filmStorage.create(film);
+        return filmService.create(film);
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film newFilm) {
         log.info("Получен запрос на обновление фильма {} с id {}.", newFilm.getName(), newFilm.getId());
-        return filmStorage.update(newFilm);
-    }
-
-    public void clear() {
-        filmStorage.clear();
+        return filmService.update(newFilm);
     }
 }
