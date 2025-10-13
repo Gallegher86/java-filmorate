@@ -2,14 +2,9 @@ package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Objects;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -23,6 +18,12 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
+    public Optional<Film> findById(Long id) {
+        Film film = films.get(id);
+        return Optional.ofNullable(film);
+    }
+
+    @Override
     public Film create(Film film) {
         long id = generateNextId();
         log.trace("Сгенерирован новый id для фильма {}", id);
@@ -33,23 +34,16 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film update(Film newFilm) {
-        Long id = newFilm.getId();
-
-        Film oldFilm = films.get(id);
-        if (Objects.isNull(oldFilm)) {
-            String errorMessage = String.format("Фильм с id %d не найден.", id);
-            throw new NotFoundException(errorMessage);
-        }
-
-        films.put(id, newFilm);
-        log.info("Обновленный фильм {} с id {} помещен  в коллекцию.", newFilm.getName(), newFilm.getId());
-        return newFilm;
+    public Film save(Film film) {
+        films.put(film.getId(), film);
+        log.trace("Фильм {} с id {} сохранен.", film.getName(), film.getId());
+        return film;
     }
 
     public void clear() {
         films.clear();
         idCounter = 1L;
+        log.trace("FilmStorage очищен.");
     }
 
     private Long generateNextId() {
