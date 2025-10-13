@@ -2,14 +2,9 @@ package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Objects;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -21,6 +16,12 @@ public class InMemoryUserStorage implements UserStorage {
         return new ArrayList<>(users.values());
     }
 
+    @Override
+    public Optional<User> findById(Long id) {
+        User user = users.get(id);
+        return Optional.ofNullable(user);
+    }
+
     public User create(User user) {
         long id = generateNextId();
         log.trace("Сгенерирован новый id для пользователя {}", id);
@@ -30,23 +31,16 @@ public class InMemoryUserStorage implements UserStorage {
         return user;
     }
 
-    public User update(User newUser) {
-        Long id = newUser.getId();
-
-        User oldUser = users.get(id);
-        if (Objects.isNull(oldUser)) {
-            String errorMessage = String.format("Пользователь с id %d не найден.", id);
-            throw new NotFoundException(errorMessage);
-        }
-
-        users.put(id, newUser);
-        log.info("Обновленный пользователь с логином {} с id {} добавлен в список.", newUser.getLogin(), newUser.getId());
-        return newUser;
+    public User save(User user) {
+        users.put(user.getId(), user);
+        log.trace("Пользователь с логином {} с id {} сохранен.", user.getLogin(), user.getId());
+        return user;
     }
 
     public void clear() {
         users.clear();
         idCounter = 1L;
+        log.trace("UserStorage очищен.");
     }
 
     private Long generateNextId() {
