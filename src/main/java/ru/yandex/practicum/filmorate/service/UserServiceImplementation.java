@@ -12,7 +12,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserServiceImplementation {
+public class UserServiceImplementation implements UserService{
     private final UserStorage userStorage;
 
     public List<User> findAll() {
