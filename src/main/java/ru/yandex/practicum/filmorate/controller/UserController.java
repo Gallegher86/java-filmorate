@@ -36,4 +36,11 @@ public class UserController {
         log.info("Получен запрос на обновление пользователя с логином {} с id {}.", newUser.getLogin(), newUser.getId());
         return userService.update(newUser);
     }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public User addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        log.info("Получен запрос от пользователя с id {} на добавление в друзья пользователя с friendId {}.",
+                id, friendId);
+        return userService.addFriend(id, friendId);
+    }
 }

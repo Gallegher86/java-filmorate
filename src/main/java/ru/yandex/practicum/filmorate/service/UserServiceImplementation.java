@@ -13,7 +13,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserServiceImplementation implements UserService{
+public class UserServiceImplementation implements UserService {
     private final UserStorage userStorage;
 
     @Override
@@ -36,26 +36,28 @@ public class UserServiceImplementation implements UserService{
         }
 
         User user = userStorage.save(newUser);
-        log.info("Обновленный пользователь с логином {} с id {} добавлен в список.", newUser.getLogin(), newUser.getId());
+        log.info("Обновленный пользователь с логином {} с id {} добавлен в список.",
+                newUser.getLogin(), newUser.getId());
         return user;
     }
 
     @Override
-    public User addFriend(Long userId, Long friendId) {
-        if (userId.equals(friendId)) {
+    public User addFriend(Long id, Long friendId) {
+        if (id.equals(friendId)) {
             throw new SelfFriendshipException("Невозможно добавить себя в друзья.");
         }
 
-        User user = userStorage.findById(userId)
+        User user = userStorage.findById(id)
                 .orElseThrow(() -> new NotFoundException(
-                        String.format("Пользователь с userId %d не найден.", userId)));
+                        String.format("Пользователь с userId %d не найден.", id)));
 
         User friend = userStorage.findById(friendId)
                 .orElseThrow(() -> new NotFoundException(
                         String.format("Пользователь с friendId %d не найден.", friendId)));
 
         user.addFriendId(friendId);
-        friend.addFriendId(userId);
+        friend.addFriendId(id);
+        log.info("Пользователь с id {} добавил в друзья пользователя с friendId {}.", id, friendId);
         return user;
     }
 

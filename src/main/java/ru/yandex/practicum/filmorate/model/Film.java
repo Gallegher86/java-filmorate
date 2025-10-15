@@ -26,9 +26,6 @@ public class Film {
     private LocalDate releaseDate;
     @Positive (message = "Продолжительность фильма должна быть положительной.")
     private int duration;
-    @Builder.Default
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
     private final Set<Long> likes = new HashSet<>();
 
     public void addLikeId(Long id) {
