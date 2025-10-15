@@ -62,6 +62,22 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
+    public User removeFriend(Long id, Long friendId) {
+        User user = userStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        String.format("Пользователь с userId %d не найден.", id)));
+
+        User friend = userStorage.findById(friendId)
+                .orElseThrow(() -> new NotFoundException(
+                        String.format("Пользователь с friendId %d не найден.", friendId)));
+
+        user.removeFriendId(friendId);
+        friend.removeFriendId(id);
+        log.info("Пользователь с id {} удалил из друзей пользователя с friendId {}.", id, friendId);
+        return user;
+    }
+
+    @Override
     public void clear() {
         userStorage.clear();
     }

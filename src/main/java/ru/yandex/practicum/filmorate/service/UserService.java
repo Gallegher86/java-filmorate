@@ -13,5 +13,7 @@ public interface UserService {
 
     User addFriend (Long id, Long FriendId);
 
+    User removeFriend(Long id, Long friendId);
+
     void clear();
 }
