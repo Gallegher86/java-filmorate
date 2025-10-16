@@ -19,7 +19,9 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public List<User> findAll() {
-        return userStorage.findAll();
+        List<User> users = userStorage.findAll();
+        log.info("Список пользователей выдан");
+        return users;
     }
 
     @Override
@@ -31,10 +33,7 @@ public class UserServiceImplementation implements UserService {
     public User update(User newUser) {
         Long id = newUser.getId();
 
-        if (userStorage.findById(id).isEmpty()) {
-            String errorMessage = String.format("Пользователь с id %d не найден.", id);
-            throw new NotFoundException(errorMessage);
-        }
+        checkId(id);
 
         User user = userStorage.save(newUser);
         log.info("Обновленный пользователь с логином {} с id {} добавлен в список.",
@@ -50,7 +49,7 @@ public class UserServiceImplementation implements UserService {
 
         User user = userStorage.findById(id)
                 .orElseThrow(() -> new NotFoundException(
-                        String.format("Пользователь с userId %d не найден.", id)));
+                        String.format("Пользователь с id %d не найден.", id)));
 
         User friend = userStorage.findById(friendId)
                 .orElseThrow(() -> new NotFoundException(
@@ -66,16 +65,16 @@ public class UserServiceImplementation implements UserService {
     public User removeFriend(Long id, Long friendId) {
         User user = userStorage.findById(id)
                 .orElseThrow(() -> new NotFoundException(
-                        String.format("Пользователь с userId %d не найден.", id)));
+                        String.format("Пользователь с id %d не найден.", id)));
+
+        User friend = userStorage.findById(friendId)
+                .orElseThrow(() -> new NotFoundException(
+                        String.format("Пользователь с friendId %d не найден.", friendId)));
 
         if (!user.getFriends().contains(friendId)) {
             throw new FriendNotFoundException(
                     String.format("friendId %d не найден в списке друзей пользователя.", friendId));
         }
-
-        User friend = userStorage.findById(friendId)
-                .orElseThrow(() -> new NotFoundException(
-                        String.format("Пользователь с friendId %d не найден.", friendId)));
 
         user.removeFriendId(friendId);
         friend.removeFriendId(id);
@@ -85,16 +84,35 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public List<User> findFriends(Long id) {
-        if (userStorage.findById(id).isEmpty()) {
-            String errorMessage = String.format("Пользователь с id %d не найден.", id);
-            throw new NotFoundException(errorMessage);
-        }
+        checkId(id);
 
-        return userStorage.findFriends(id);
+        List<User> friends = userStorage.findFriends(id);
+        log.info("Список друзей пользователя с id {} выдан.", id);
+        return friends;
+    }
+
+    @Override
+    public List<User> findCommonFriends(Long id, Long otherId) {
+        checkId(id);
+        checkId(otherId);
+
+        List<User> otherFriends = userStorage.findFriends(otherId);
+        List<User> commonFriends = userStorage.findFriends(id).stream()
+                .filter(otherFriends::contains)
+                .toList();
+        log.info("Список общих друзей пользователя с id {} и пользователя с otherId {} выдан.", id, otherId);
+        return commonFriends;
     }
 
     @Override
     public void clear() {
         userStorage.clear();
+    }
+
+    private void checkId(Long id) {
+        if (userStorage.findById(id).isEmpty()) {
+            String errorMessage = String.format("Пользователь с id %d не найден.", id);
+            throw new NotFoundException(errorMessage);
+        }
     }
 }

@@ -17,5 +17,7 @@ public interface UserService {
 
     List<User> findFriends(Long id);
 
+    List<User> findCommonFriends(Long id, Long otherId);
+
     void clear();
 }

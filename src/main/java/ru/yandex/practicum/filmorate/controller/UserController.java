@@ -56,4 +56,11 @@ public class UserController {
         log.info("Получен запрос на получение списка друзей пользователя с id {}.", id);
         return userService.findFriends(id);
     }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> findCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
+        log.info("Получен запрос на получение общего списка друзей пользователя с id {} " +
+                "и пользователя с otherId {}.", id, otherId);
+        return userService.findCommonFriends(id, otherId);
+    }
 }
