@@ -50,4 +50,10 @@ public class UserController {
                 id, friendId);
         return userService.removeFriend(id, friendId);
     }
+
+    @GetMapping("/{id}/friends")
+    public List<User> findFriends(@PathVariable Long id) {
+        log.info("Получен запрос на получение списка друзей пользователя с id {}.", id);
+        return userService.findFriends(id);
+    }
 }

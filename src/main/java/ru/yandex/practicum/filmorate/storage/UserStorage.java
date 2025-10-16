@@ -10,6 +10,8 @@ public interface UserStorage {
 
     Optional<User> findById(Long id);
 
+    List<User> findFriends(Long id);
+
     User create(User user);
 
     User save(User newUser);

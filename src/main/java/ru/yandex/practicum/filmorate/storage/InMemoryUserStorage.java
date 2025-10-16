@@ -22,6 +22,15 @@ public class InMemoryUserStorage implements UserStorage {
         return Optional.ofNullable(user);
     }
 
+    @Override
+    public List<User> findFriends(Long id) {
+        User user = users.get(id);
+        return users.values().stream()
+                .filter(friend -> user.getFriends().contains(friend.getId()))
+                .toList();
+    }
+
+    @Override
     public User create(User user) {
         long id = generateNextId();
         log.trace("Сгенерирован новый id для пользователя {}", id);
@@ -31,12 +40,14 @@ public class InMemoryUserStorage implements UserStorage {
         return user;
     }
 
+    @Override
     public User save(User user) {
         users.put(user.getId(), user);
         log.trace("Пользователь с логином {} с id {} сохранен.", user.getLogin(), user.getId());
         return user;
     }
 
+    @Override
     public void clear() {
         users.clear();
         idCounter = 1L;

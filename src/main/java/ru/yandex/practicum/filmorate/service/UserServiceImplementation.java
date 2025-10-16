@@ -84,6 +84,16 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
+    public List<User> findFriends(Long id) {
+        if (userStorage.findById(id).isEmpty()) {
+            String errorMessage = String.format("Пользователь с id %d не найден.", id);
+            throw new NotFoundException(errorMessage);
+        }
+
+        return userStorage.findFriends(id);
+    }
+
+    @Override
     public void clear() {
         userStorage.clear();
     }

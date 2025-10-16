@@ -15,5 +15,7 @@ public interface UserService {
 
     User removeFriend(Long id, Long friendId);
 
+    List<User> findFriends(Long id);
+
     void clear();
 }

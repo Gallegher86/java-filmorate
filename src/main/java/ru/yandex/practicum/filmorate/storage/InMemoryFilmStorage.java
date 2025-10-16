@@ -40,6 +40,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         return film;
     }
 
+    @Override
     public void clear() {
         films.clear();
         idCounter = 1L;
