@@ -18,6 +18,4 @@ public interface FilmService {
     List<Film> getPopularFilms(long count);
 
     void checkFilmId(Long id);
-
-    void clear();
 }

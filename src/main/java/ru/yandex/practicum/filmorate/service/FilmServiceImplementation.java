@@ -74,8 +74,7 @@ public class FilmServiceImplementation implements FilmService {
     @Override
     public List<Film> getPopularFilms(long count){
         if (count < 0) {
-            throw new IllegalArgumentException("Параметр размера списка популярных фильмов {count} " +
-                    "не может быть отрицательным.");
+            throw new IllegalArgumentException("Параметр {count} не может быть отрицательным.");
         }
 
         List<Film> topFilms = filmStorage.findAll().stream()
@@ -93,10 +92,5 @@ public class FilmServiceImplementation implements FilmService {
             String errorMessage = String.format("Фильм с id %d не найден.", id);
             throw new NotFoundException(errorMessage);
         }
-    }
-
-    @Override
-    public void clear() {
-        filmStorage.clear();
     }
 }

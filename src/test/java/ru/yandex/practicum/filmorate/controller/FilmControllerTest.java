@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 
@@ -21,7 +25,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class FilmControllerTest {
     @Autowired
-    private FilmService filmService;
+    private FilmStorage filmStorage;
+
+    @Autowired
+    private UserStorage userStorage;
 
     @Autowired
     private MockMvc mockMvc;
@@ -36,9 +43,17 @@ class FilmControllerTest {
             .duration(200)
             .build();
 
+    private User user = User.builder()
+            .name("TestName")
+            .login("TestLogin")
+            .email("test@test.com")
+            .birthday(LocalDate.of(2000, 12, 31))
+            .build();
+
     @BeforeEach
     public void clear() {
-        filmService.clear();
+        filmStorage.clear();
+        userStorage.clear();
     }
 
     @Test
@@ -138,6 +153,72 @@ class FilmControllerTest {
 
         checkValidation(negativeDuratiionFilm,
                 "duration: Продолжительность фильма должна быть положительной.");
+    }
+
+    @Test
+    public void mustAddLikeAndReturn200() throws Exception {
+        filmStorage.create(film);
+        userStorage.create(user);
+
+        mockMvc.perform(put("/films/1/like/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.likes").value(Matchers.hasItem(1)));
+    }
+
+    @Test
+    public void mustDeleteLikeAndReturn200() throws Exception {
+        film = filmStorage.create(film);
+        userStorage.create(user);
+        film.addLikeId(user.getId());
+
+        mockMvc.perform(delete("/films/1/like/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.likes").isEmpty());
+    }
+
+    @Test
+    public void mustReturn404IfAddOrDeleteLikeToFilmWhichNotExist() throws Exception {
+        userStorage.create(user);
+
+        mockMvc.perform(put("/films/1/like/1"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage").value("Фильм с id 1 не найден."));
+
+        mockMvc.perform(delete("/films/1/like/1"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage").value("Фильм с id 1 не найден."));
+    }
+
+    @Test
+    public void mustGetPopularFilmsAndReturn200() throws Exception{
+        filmStorage.create(film);
+        Film popularFilm = filmStorage.create(film);
+        userStorage.create(user);
+        popularFilm.addLikeId(user.getId());
+
+        mockMvc.perform(get("/films/popular?count=1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", Matchers.hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(2));
+    }
+
+    @Test
+    public void mustGet10FilmsIfCountIsNotSet() throws Exception {
+        for (int i = 0; i < 11; i++) {
+            filmStorage.create(film);
+        }
+
+        mockMvc.perform(get("/films/popular"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", Matchers.hasSize(10)));
+    }
+
+    @Test
+    public void mustReturn400IfCountIsNegative() throws Exception{
+        mockMvc.perform(get("/films/popular?count=-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Параметр {count} не может быть отрицательным."));
     }
 
     private void checkValidation(Film film, String expectedMessage) throws Exception {
