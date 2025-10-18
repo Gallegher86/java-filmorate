@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -73,6 +74,16 @@ public class GlobalExceptionHandler {
 
         Map<String, Object> body = makeBody(errorMessage, HttpStatus.NOT_FOUND.value(), null);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Map<String, Object>> handleWrongRequestMethod(HttpRequestMethodNotSupportedException ex) {
+        String errorMessage = String.format("Метод %s не поддерживается.", ex.getMethod());
+        String logMessage = String.format("Получен запрос с нереализованным методом %s.", ex.getMethod());
+        log.warn(logMessage);
+
+        Map<String, Object> body = makeBody(errorMessage, HttpStatus.METHOD_NOT_ALLOWED.value(), null);
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(body);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
