@@ -3,8 +3,8 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exceptions.FriendNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.SelfFriendshipException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -43,7 +43,8 @@ public class UserServiceImplementation implements UserService {
     @Override
     public User addFriend(Long id, Long friendId) {
         if (id.equals(friendId)) {
-            throw new SelfFriendshipException("Невозможно добавить себя в друзья.", id);
+            throw new IllegalArgumentException(
+                    String.format("Пользователь с id %d не может быть добавлен в друзья к самому себе.", id));
         }
 
         User user = userStorage.findById(id)
@@ -71,7 +72,7 @@ public class UserServiceImplementation implements UserService {
                         String.format("Пользователь с friendId %d не найден.", friendId)));
 
         if (!user.getFriends().contains(friendId)) {
-            throw new IllegalArgumentException(
+            throw new FriendNotFoundException(
                     String.format("friendId %d не найден в списке друзей пользователя c id %d.", friendId, id));
         }
 

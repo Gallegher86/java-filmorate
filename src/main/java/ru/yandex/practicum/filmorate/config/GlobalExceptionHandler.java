@@ -9,8 +9,8 @@ import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import ru.yandex.practicum.filmorate.exceptions.FriendNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.SelfFriendshipException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -47,14 +47,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    @ExceptionHandler(SelfFriendshipException.class)
-    public ResponseEntity<Map<String, Object>> handleSelfFriendshipException(SelfFriendshipException ex) {
-        String logMessage = String.format("Получен запрос на добавление пользователя с id %d самому себе в друзья.",
-                ex.getId());
-        log.warn(logMessage);
+    @ExceptionHandler(FriendNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleSelfFriendshipException(FriendNotFoundException ex) {
+        log.warn(ex.getMessage());
 
-        Map<String, Object> body = makeBody(ex.getMessage(), HttpStatus.BAD_REQUEST.value(), null);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        Map<String, Object> body = new HashMap<>();
+        body.put("Выявлено несоответствие в запросе:", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.OK).body(body);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
