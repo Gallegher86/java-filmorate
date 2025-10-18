@@ -14,7 +14,7 @@ public interface UserStorage {
 
     User create(User user);
 
-    User save(User newUser);
+    User save(User user);
 
     void clear();
 }

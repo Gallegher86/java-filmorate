@@ -25,19 +25,19 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public User create(User user) {
-        return userStorage.create(user);
+    public User create(User newUser) {
+        User user = userStorage.create(newUser);
+        log.info("Пользователь с логином {} с id {} добавлен в список.", user.getLogin(), user.getId());
+        return user;
     }
 
     @Override
-    public User update(User newUser) {
-        Long id = newUser.getId();
+    public User update(User updatedUser) {
+        checkUserId(updatedUser.getId());
 
-        checkId(id);
-
-        User user = userStorage.save(newUser);
+        User user = userStorage.save(updatedUser);
         log.info("Обновленный пользователь с логином {} с id {} добавлен в список.",
-                newUser.getLogin(), newUser.getId());
+                user.getLogin(), user.getId());
         return user;
     }
 
@@ -84,7 +84,7 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public List<User> findFriends(Long id) {
-        checkId(id);
+        checkUserId(id);
 
         List<User> friends = userStorage.findFriends(id);
         log.info("Список друзей пользователя с id {} выдан.", id);
@@ -93,8 +93,8 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public List<User> findCommonFriends(Long id, Long otherId) {
-        checkId(id);
-        checkId(otherId);
+        checkUserId(id);
+        checkUserId(otherId);
 
         List<User> otherFriends = userStorage.findFriends(otherId);
         List<User> commonFriends = userStorage.findFriends(id).stream()
@@ -105,14 +105,15 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public void clear() {
-        userStorage.clear();
-    }
-
-    private void checkId(Long id) {
+    public void checkUserId(Long id) {
         if (userStorage.findById(id).isEmpty()) {
             String errorMessage = String.format("Пользователь с id %d не найден.", id);
             throw new NotFoundException(errorMessage);
         }
+    }
+
+    @Override
+    public void clear() {
+        userStorage.clear();
     }
 }

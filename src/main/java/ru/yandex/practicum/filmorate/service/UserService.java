@@ -7,9 +7,9 @@ import java.util.List;
 public interface UserService {
     List<User> findAll();
 
-    User create(User user);
+    User create(User newUser);
 
-    User update(User newUser);
+    User update(User updatedUser);
 
     User addFriend (Long id, Long FriendId);
 
@@ -18,6 +18,8 @@ public interface UserService {
     List<User> findFriends(Long id);
 
     List<User> findCommonFriends(Long id, Long otherId);
+
+    void checkUserId(Long id);
 
     void clear();
 }
