@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.FriendNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.SelfFriendshipException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -72,7 +71,7 @@ public class UserServiceImplementation implements UserService {
                         String.format("Пользователь с friendId %d не найден.", friendId)));
 
         if (!user.getFriends().contains(friendId)) {
-            throw new FriendNotFoundException(
+            throw new IllegalArgumentException(
                     String.format("friendId %d не найден в списке друзей пользователя c id %d.", friendId, id));
         }
 

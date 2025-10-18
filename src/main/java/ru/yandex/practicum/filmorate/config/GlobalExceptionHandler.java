@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
-import ru.yandex.practicum.filmorate.exceptions.FriendNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.SelfFriendshipException;
 
@@ -58,8 +57,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    @ExceptionHandler(FriendNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleFriendNotFoundException(FriendNotFoundException ex) {
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
         log.warn(ex.getMessage());
 
         Map<String, Object> body = makeBody(ex.getMessage(), HttpStatus.BAD_REQUEST.value(), null);

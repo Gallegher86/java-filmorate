@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.LikeNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -63,7 +62,7 @@ public class FilmServiceImplementation implements FilmService {
                         String.format("Фильм с id %d не найден.", id)));
 
         if (!film.getLikes().contains(userId)) {
-            throw new LikeNotFoundException(
+            throw new IllegalArgumentException(
                     String.format("Пользователь с userId %d не ставил лайк фильму c id %d.", userId, id));
         }
 
@@ -74,6 +73,11 @@ public class FilmServiceImplementation implements FilmService {
 
     @Override
     public List<Film> getPopularFilms(long count){
+        if (count < 0) {
+            throw new IllegalArgumentException("Параметр размера списка популярных фильмов {count} " +
+                    "не может быть отрицательным.");
+        }
+
         List<Film> topFilms = filmStorage.findAll().stream()
                 .sorted(Comparator.comparingLong((Film f) -> f.getLikes().size()).reversed())
                 .limit(count)
