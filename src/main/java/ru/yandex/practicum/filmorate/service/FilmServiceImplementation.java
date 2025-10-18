@@ -82,7 +82,7 @@ public class FilmServiceImplementation implements FilmService {
     }
 
     @Override
-    public List<Film> getPopularFilms(long count){
+    public List<Film> getPopularFilms(long count) {
         if (count < 0) {
             throw new IllegalArgumentException("Параметр {count} не может быть отрицательным.");
         }
