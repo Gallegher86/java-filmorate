@@ -12,7 +12,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -167,9 +166,9 @@ class FilmControllerTest {
 
     @Test
     public void mustDeleteLikeAndReturn200() throws Exception {
-        film = filmStorage.create(film);
+        filmStorage.create(film);
         userStorage.create(user);
-        film.addLikeId(user.getId());
+        mockMvc.perform(put("/films/1/like/1"));
 
         mockMvc.perform(delete("/films/1/like/1"))
                 .andExpect(status().isOk())
@@ -182,15 +181,43 @@ class FilmControllerTest {
 
         mockMvc.perform(put("/films/1/like/1"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorMessage").value("Фильм с id 1 не найден."));
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Фильм с id 1 не найден."));
 
         mockMvc.perform(delete("/films/1/like/1"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorMessage").value("Фильм с id 1 не найден."));
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Фильм с id 1 не найден."));
     }
 
     @Test
-    public void mustGetPopularFilmsAndReturn200() throws Exception{
+    public void mustReturn404IfAddOrDeleteLikeFromUserWhichNotExist() throws Exception {
+        filmStorage.create(film);
+
+        mockMvc.perform(put("/films/1/like/1"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Пользователь с id 1 не найден."));
+
+        mockMvc.perform(delete("/films/1/like/1"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Пользователь с id 1 не найден."));
+    }
+
+    @Test
+    public void mustReturn400IfDeleteLikeFromUserWhichDidntAddLike() throws Exception {
+        filmStorage.create(film);
+        userStorage.create(user);
+
+        mockMvc.perform(delete("/films/1/like/1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Пользователь с userId 1 не ставил лайк фильму c id 1."));
+    }
+
+    @Test
+    public void mustGetPopularFilmsAndReturn200() throws Exception {
         filmStorage.create(film);
         Film popularFilm = filmStorage.create(film);
         userStorage.create(user);
@@ -205,7 +232,7 @@ class FilmControllerTest {
     @Test
     public void mustGet10FilmsIfCountIsNotSet() throws Exception {
         for (int i = 0; i < 11; i++) {
-            filmStorage.create(film);
+            filmStorage.create(film.toBuilder().build());
         }
 
         mockMvc.perform(get("/films/popular"))
@@ -214,7 +241,7 @@ class FilmControllerTest {
     }
 
     @Test
-    public void mustReturn400IfCountIsNegative() throws Exception{
+    public void mustReturn400IfCountIsNegative() throws Exception {
         mockMvc.perform(get("/films/popular?count=-1"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessage")

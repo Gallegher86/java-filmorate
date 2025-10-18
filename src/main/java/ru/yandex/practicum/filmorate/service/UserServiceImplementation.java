@@ -111,9 +111,4 @@ public class UserServiceImplementation implements UserService {
             throw new NotFoundException(errorMessage);
         }
     }
-
-    @Override
-    public void clear() {
-        userStorage.clear();
-    }
 }

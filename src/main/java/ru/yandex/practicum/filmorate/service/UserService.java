@@ -20,6 +20,4 @@ public interface UserService {
     List<User> findCommonFriends(Long id, Long otherId);
 
     void checkUserId(Long id);
-
-    void clear();
 }

@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 
@@ -21,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class UserControllerTest {
     @Autowired
-    private UserService userService;
+    private UserStorage userStorage;
 
     @Autowired
     private MockMvc mockMvc;
@@ -38,7 +39,7 @@ class UserControllerTest {
 
     @BeforeEach
     public void clear() {
-        userService.clear();
+        userStorage.clear();
     }
 
     @Test
@@ -155,6 +156,114 @@ class UserControllerTest {
                 .build();
         checkValidation(futureUser,
                 "birthday: Дата рождения не может быть в будущем.");
+    }
+
+    @Test
+    public void mustAddFriendAndReturn200() throws Exception {
+        userStorage.create(user.toBuilder().build());
+        userStorage.create(user.toBuilder().build());
+
+        mockMvc.perform(put("/users/1/friends/2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.friends", Matchers.hasSize(1)))
+                .andExpect(jsonPath("$.friends").value(Matchers.hasItem(2)));
+    }
+
+    @Test
+    public void mustRemoveFriendAndReturn200() throws Exception {
+        userStorage.create(user.toBuilder().build());
+        userStorage.create(user.toBuilder().build());
+        mockMvc.perform(put("/users/1/friends/2"));
+
+        mockMvc.perform(delete("/users/1/friends/2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.friends", Matchers.hasSize(0)));
+    }
+
+    @Test
+    public void mustReturnFriendsAndReturn200() throws Exception {
+        userStorage.create(user.toBuilder().build());
+        userStorage.create(user.toBuilder().build());
+        mockMvc.perform(put("/users/1/friends/2"));
+
+        mockMvc.perform(get("/users/1/friends"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(2))
+                .andExpect(jsonPath("$[0].friends", Matchers.hasSize(1)))
+                .andExpect(jsonPath("$[0].friends").value(Matchers.hasItem(1)));
+    }
+
+    @Test
+    public void mustReturn400IfAddYourselfAsFriend() throws Exception {
+        userStorage.create(user);
+
+        mockMvc.perform(put("/users/1/friends/1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Пользователь с id 1 не может быть добавлен " +
+                                "в друзья к самому себе."));
+    }
+
+    @Test
+    public void mustReturnCommonFriendsAndReturn200() throws Exception {
+        userStorage.create(user.toBuilder().build());
+        userStorage.create(user.toBuilder().build());
+        userStorage.create(user.toBuilder().build());
+        mockMvc.perform(put("/users/1/friends/3"));
+        mockMvc.perform(put("/users/2/friends/3"));
+
+        mockMvc.perform(get("/users/1/friends/common/2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(3))
+                .andExpect(jsonPath("$[0].friends", Matchers.hasSize(2)))
+                .andExpect(jsonPath("$[0].friends").value(Matchers.hasItems(1, 2)));
+    }
+
+    @Test
+    public void mustReturn404IfUserNotFound() throws Exception {
+        userStorage.create(user);
+
+        mockMvc.perform(put("/users/2/friends/1"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Пользователь с id 2 не найден."));
+
+        mockMvc.perform(delete("/users/2/friends/1"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Пользователь с id 2 не найден."));
+
+        mockMvc.perform(get("/users/2/friends"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Пользователь с id 2 не найден."));
+
+        mockMvc.perform(get("/users/2/friends/common/1"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Пользователь с id 2 не найден."));
+    }
+
+    @Test
+    public void mustReturn404IfFriendNotFound() throws Exception {
+        userStorage.create(user);
+
+        mockMvc.perform(put("/users/1/friends/2"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Пользователь с friendId 2 не найден."));
+
+        mockMvc.perform(delete("/users/1/friends/2"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Пользователь с friendId 2 не найден."));
+
+        mockMvc.perform(get("/users/1/friends/common/2"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Пользователь с id 2 не найден."));
     }
 
     private void checkValidation(User user, String expectedMessage) throws Exception {
