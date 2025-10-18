@@ -109,6 +109,26 @@ class FilmControllerTest {
     }
 
     @Test
+    public void mustFindFilmByIdAndReturn200() throws Exception {
+        filmStorage.create(film);
+
+        mockMvc.perform(get("/films/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("1"))
+                .andExpect(jsonPath("$.name").value("TestMovie"))
+                .andExpect(jsonPath("$.description").value("TestDescription"))
+                .andExpect(jsonPath("$.releaseDate").value("1895-12-28"))
+                .andExpect(jsonPath("$.duration").value("200"));
+    }
+
+    @Test
+    public void mustReturn404IdfFilmNotFoundById() throws Exception {
+        mockMvc.perform(get("/films/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage").value("Фильм с id 999 не найден."));
+    }
+
+    @Test
     public void mustReturn404IfFilmNotFoundOnUpdate() throws Exception {
         film = film.toBuilder()
                 .id(999L)

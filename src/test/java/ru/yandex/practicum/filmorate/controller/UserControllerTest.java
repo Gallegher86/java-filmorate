@@ -96,6 +96,26 @@ class UserControllerTest {
     }
 
     @Test
+    public void mustFindUserByIdAndReturn200() throws Exception {
+        userStorage.create(user);
+
+        mockMvc.perform(get("/users/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("1"))
+                .andExpect(jsonPath("$.name").value("TestName"))
+                .andExpect(jsonPath("$.login").value("TestLogin"))
+                .andExpect(jsonPath("$.email").value("test@test.com"))
+                .andExpect(jsonPath("$.birthday").value("2000-12-31"));
+    }
+
+    @Test
+    public void mustReturn404IfUserNotFoundById() throws Exception {
+        mockMvc.perform(get("/users/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage").value("Пользователь с id 999 не найден."));
+    }
+
+    @Test
     public void mustReturn404IfUserNotFoundOnUpdate() throws Exception {
         user = user.toBuilder()
                 .id(999L)
