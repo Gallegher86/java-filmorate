@@ -20,7 +20,7 @@ public class UserServiceImplementation implements UserService {
     @Override
     public List<User> findAll() {
         List<User> users = userStorage.findAll();
-        log.info("Список пользователей выдан");
+        log.info("Список пользователей выдан.");
         return users;
     }
 
@@ -44,7 +44,7 @@ public class UserServiceImplementation implements UserService {
     @Override
     public User addFriend(Long id, Long friendId) {
         if (id.equals(friendId)) {
-            throw new SelfFriendshipException("Невозможно добавить себя в друзья.");
+            throw new SelfFriendshipException("Невозможно добавить себя в друзья.", id);
         }
 
         User user = userStorage.findById(id)
@@ -73,7 +73,7 @@ public class UserServiceImplementation implements UserService {
 
         if (!user.getFriends().contains(friendId)) {
             throw new FriendNotFoundException(
-                    String.format("friendId %d не найден в списке друзей пользователя.", friendId));
+                    String.format("friendId %d не найден в списке друзей пользователя c id %d.", friendId, id));
         }
 
         user.removeFriendId(friendId);
