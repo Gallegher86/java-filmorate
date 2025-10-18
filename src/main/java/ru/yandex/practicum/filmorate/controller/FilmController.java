@@ -49,7 +49,7 @@ public class FilmController {
         return filmService.deleteLike(id, userId);
     }
 
-    @GetMapping("/popular?count={count}")
+    @GetMapping("/popular")
     public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") long count) {
         log.info("Получен запрос на получение {} популярных фильмов.", count);
         return filmService.getPopularFilms(count);
