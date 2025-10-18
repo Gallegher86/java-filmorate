@@ -24,6 +24,16 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
+    public User findById(Long id) {
+        User user = userStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        String.format("Пользователь с id %d не найден.", id)));
+
+        log.info("Пользователь с id {} выдан.", id);
+        return user;
+    }
+
+    @Override
     public User create(User newUser) {
         User user = userStorage.create(newUser);
         log.info("Пользователь с логином {} с id {} добавлен в список.", user.getLogin(), user.getId());

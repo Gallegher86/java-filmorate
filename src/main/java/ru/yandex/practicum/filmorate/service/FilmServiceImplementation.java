@@ -25,6 +25,16 @@ public class FilmServiceImplementation implements FilmService {
     }
 
     @Override
+    public Film findById(Long id) {
+        Film film = filmStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        String.format("Фильм с id %d не найден.", id)));
+
+        log.info("Фильм с id {} выдан.", id);
+        return film;
+    }
+
+    @Override
     public Film create(Film newFilm) {
         Film film = filmStorage.create(newFilm);
         log.info("Фильм {} с id {} помещен  в коллекцию.", film.getName(), film.getId());
