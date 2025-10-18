@@ -28,8 +28,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         long id = generateNextId();
         log.trace("Сгенерирован новый id для фильма {}", id);
         film.setId(id);
-        films.put(id, film);
-        log.info("Фильм {} с id {} помещен  в коллекцию.", film.getName(), film.getId());
+        save(film);
         return film;
     }
 
