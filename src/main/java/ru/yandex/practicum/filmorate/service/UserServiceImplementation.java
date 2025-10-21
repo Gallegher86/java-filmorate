@@ -80,11 +80,6 @@ public class UserServiceImplementation implements UserService {
                 .orElseThrow(() -> new NotFoundException(
                         String.format("Пользователь с friendId %d не найден.", friendId)));
 
-        if (!user.getFriends().contains(friendId)) {
-            throw new IllegalArgumentException(
-                    String.format("friendId %d не найден в списке друзей пользователя c id %d.", friendId, id));
-        }
-
         user.removeFriendId(friendId);
         friend.removeFriendId(id);
         log.info("Пользователь с id {} удалил из друзей пользователя с friendId {}.", id, friendId);
