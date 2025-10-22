@@ -5,13 +5,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.Builder;
-import lombok.ToString;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Builder (toBuilder = true)
 @Getter
@@ -29,8 +27,21 @@ public class User {
     private String name;
     @PastOrPresent(message = "Дата рождения не может быть в будущем.")
     private LocalDate birthday;
+    private final Set<Long> friends = new HashSet<>();
 
     public String getName() {
         return (name == null || name.isBlank()) ? login : name;
+    }
+
+    public void addFriendId(Long id) {
+        friends.add(id);
+    }
+
+    public void removeFriendId(Long id) {
+        friends.remove(id);
+    }
+
+    public Set<Long> getFriends() {
+        return new HashSet<>(friends);
     }
 }
