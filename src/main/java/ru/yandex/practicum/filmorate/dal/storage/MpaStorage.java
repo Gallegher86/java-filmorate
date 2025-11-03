@@ -9,4 +9,6 @@ public interface MpaStorage {
     List<Mpa> findAll();
 
     Optional<Mpa> findById(Long id);
+
+    Optional<Mpa> findByFilmId(Long id);
 }

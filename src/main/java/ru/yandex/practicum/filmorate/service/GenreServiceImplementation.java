@@ -27,7 +27,7 @@ public class GenreServiceImplementation implements GenreService {
 
     @Override
     public Genre findById(Long id) {
-        Genre genre = genreStorage.findById(id)
+        Genre genre = genreStorage.findByGenreId(id)
                 .orElseThrow(() -> new NotFoundException(
                         String.format("Жанр с id %d не найден.", id)));
 

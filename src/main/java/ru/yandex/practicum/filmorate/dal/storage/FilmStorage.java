@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.dal.storage;
 
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -12,7 +12,9 @@ public interface FilmStorage {
 
     Film create(Film film);
 
-    Film save(Film newFilm);
+    Film update(Film newFilm);
+
+    boolean existsById(Long id);
 
     void clear();
 }

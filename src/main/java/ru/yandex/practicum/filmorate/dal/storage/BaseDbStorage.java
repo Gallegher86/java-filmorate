@@ -60,4 +60,8 @@ public class BaseDbStorage<T> {
             throw new DataOperationException("Не удалось сохранить данные в базу данных.");
         }
     }
+
+    protected void execute(String query, Object... params) {
+        jdbc.update(query, params);
+    }
 }

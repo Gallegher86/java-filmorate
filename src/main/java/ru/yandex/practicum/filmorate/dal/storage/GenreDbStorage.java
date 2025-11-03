@@ -10,8 +10,10 @@ import java.util.Optional;
 
 @Repository
 public class GenreDbStorage extends BaseDbStorage<Genre> implements GenreStorage {
-    private static final String GET_GENRES_QUERY = "SELECT * FROM genres";
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM genres WHERE id = ?";
+    private static final String FIND_ALL_QUERY = "SELECT * FROM genres";
+    private static final String FIND_BY_GENRE_ID_QUERY = "SELECT * FROM genres WHERE id = ?";
+    private static final String FIND_BY_FILM_ID_QUERY = "SELECT g.id, g.name FROM film_genre AS fg " +
+            "JOIN genres AS g ON fg.genre_id = g.id WHERE fg.film_id = ? ORDER BY fg.genre_id";
 
     public GenreDbStorage(JdbcTemplate jdbc, RowMapper<Genre> mapper) {
         super(jdbc, mapper);
@@ -19,11 +21,16 @@ public class GenreDbStorage extends BaseDbStorage<Genre> implements GenreStorage
 
     @Override
     public List<Genre> findAll() {
-        return findMany(GET_GENRES_QUERY);
+        return findMany(FIND_ALL_QUERY);
     }
 
     @Override
-    public Optional<Genre> findById(Long id) {
-        return findOne(FIND_BY_ID_QUERY, id);
+    public Optional<Genre> findByGenreId(Long id) {
+        return findOne(FIND_BY_GENRE_ID_QUERY, id);
+    }
+
+    @Override
+    public List<Genre> findByFilmId(Long id) {
+        return findMany(FIND_BY_FILM_ID_QUERY, id);
     }
 }
