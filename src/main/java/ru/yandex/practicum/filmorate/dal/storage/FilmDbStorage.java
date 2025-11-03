@@ -5,8 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exceptions.GenreNotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.MpaNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.Date;
 import java.util.*;
@@ -71,6 +74,9 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public Film create(Film film) {
+        checkMpa(film);
+        checkGenre(film);
+
         Long id = insert(
                 INSERT_QUERY,
                 film.getName(),
@@ -151,5 +157,24 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         List<Genre> genres = genreStorage.findByFilmId(id);
         film.addGenres(genres);
+    }
+
+    private void checkMpa (Film film) {
+        Mpa mpa = film.getMpa();
+        List<Mpa> validMpa = mpaStorage.findAll();
+
+        if (mpa != null && !validMpa.contains(mpa)) {
+            throw new MpaNotFoundException("Рейтинг MPA не найден в списке: " + mpa +
+                    ". Допустимые значения: " + validMpa);
+        }
+    }
+
+    private void checkGenre (Film film) {
+        List<Genre> genres = film.getGenres();
+        List<Genre> dbGenres = genreStorage.findAll();
+
+        if (!genres.isEmpty() && !dbGenres.containsAll(genres)) {
+            throw new GenreNotFoundException("Жанр не найден в списке. Допустимые значения:" + dbGenres);
+        }
     }
 }

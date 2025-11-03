@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import ru.yandex.practicum.filmorate.exceptions.GenreNotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.MpaNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 
 import java.util.HashMap;
@@ -84,6 +86,22 @@ public class GlobalExceptionHandler {
 
         Map<String, Object> body = makeBody(errorMessage, HttpStatus.BAD_REQUEST.value(), null);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(MpaNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleMpaNotFoundException(MpaNotFoundException ex) {
+        log.warn(ex.getMessage());
+
+        Map<String, Object> body = makeBody(ex.getMessage(), HttpStatus.NOT_FOUND.value(), null);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(GenreNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleGenreNotFoundException(GenreNotFoundException ex) {
+        log.warn(ex.getMessage());
+
+        Map<String, Object> body = makeBody(ex.getMessage(), HttpStatus.NOT_FOUND.value(), null);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
     @ExceptionHandler(Exception.class)
