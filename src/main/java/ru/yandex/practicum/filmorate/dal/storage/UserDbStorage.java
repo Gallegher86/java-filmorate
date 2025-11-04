@@ -79,7 +79,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
                 user.getEmail(),
                 user.getLogin(),
                 user.getName(),
-                Date.valueOf(user.getBirthday())
+                user.getBirthday()
         );
         user.setId(id);
         log.trace("Пользователь {} с id {} сохранен в БД.", user.getLogin(), user.getId());
@@ -115,7 +115,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public void removeFriend(Long userId, Long friendId) {
-        update(REMOVE_FRIEND_QUERY, userId, friendId);
+        delete(REMOVE_FRIEND_QUERY, userId, friendId);
     }
 
     @Override

@@ -51,7 +51,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public void deleteLike(Long id, Long userId) {
+    public boolean deleteLike(Long id, Long userId) {
         throw new MethodNotImplementedException("Метод не реализован.");
     }
 

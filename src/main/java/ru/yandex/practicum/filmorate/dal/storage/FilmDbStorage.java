@@ -96,7 +96,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 INSERT_QUERY,
                 film.getName(),
                 film.getDescription(),
-                Date.valueOf(film.getReleaseDate()),
+                film.getReleaseDate(),
                 film.getDuration(),
                 film.getMpa().getId()
         );
@@ -137,8 +137,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     }
 
     @Override
-    public void deleteLike(Long id, Long userId) {
-        update(DELETE_LIKE_QUERY, id, userId);
+    public boolean deleteLike(Long id, Long userId) {
+        return delete(DELETE_LIKE_QUERY, id, userId);
     }
 
     @Override

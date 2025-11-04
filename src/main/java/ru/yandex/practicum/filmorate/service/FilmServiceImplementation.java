@@ -82,8 +82,11 @@ public class FilmServiceImplementation implements FilmService {
     public void deleteLike(Long id, Long userId) {
         userService.checkUserId(userId);
         checkFilmId(id);
-        filmStorage.deleteLike(id, userId);
-        log.info("Пользователь с userId {} удалил лайк фильму с id {}.", userId, id);
+        if (filmStorage.deleteLike(id, userId)) {
+            log.info("Пользователь с userId {} удалил лайк фильму с id {}.", userId, id);
+        } else {
+            log.info("Пользователь с userId {} не ставил лайк фильму с id {}.", userId, id);
+        }
     }
 
     @Override
@@ -106,7 +109,7 @@ public class FilmServiceImplementation implements FilmService {
 
     private void checkMpa(Long id) {
         if (!filmStorage.mpaExistsById(id)) {
-            String errorMessage = String.format("Рейтинга mpa c id %d не найден.", id);
+            String errorMessage = String.format("Рейтинг mpa c id %d не найден.", id);
             throw new MpaNotFoundException(errorMessage);
         }
     }
