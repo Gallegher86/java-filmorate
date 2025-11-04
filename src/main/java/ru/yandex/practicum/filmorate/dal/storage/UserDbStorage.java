@@ -102,19 +102,19 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     }
 
     @Override
-    public void addFriend (Long userId, Long friendId, FriendStatus status) {
+    public void addFriend(Long userId, Long friendId, FriendStatus status) {
         update(INSERT_FRIENDSHIP_QUERY, userId, friendId, status.name());
         log.trace("Создана дружба userId {} с friendId {}, статус {}.", userId, friendId, status.name());
     }
 
     @Override
-    public void updateFriend (Long userId, Long friendId, FriendStatus status) {
+    public void updateFriend(Long userId, Long friendId, FriendStatus status) {
         update(UPDATE_FRIENDSHIP_QUERY, status.name(), userId, friendId);
         log.trace("Обновлена дружба userId {} с friendId {}, статус {}.", userId, friendId, status.name());
     }
 
     @Override
-    public void removeFriend (Long userId, Long friendId) {
+    public void removeFriend(Long userId, Long friendId) {
         update(REMOVE_FRIEND_QUERY, userId, friendId);
     }
 

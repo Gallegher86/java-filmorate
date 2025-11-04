@@ -27,11 +27,11 @@ public class MpaServiceImplementation implements MpaService {
 
     @Override
     public Mpa findById(Long id) {
-        Mpa mpa_rating = mpaStorage.findById(id)
+        Mpa mpa = mpaStorage.findById(id)
                 .orElseThrow(() -> new NotFoundException(
                         String.format("Рейтинг mpa с id %d не найден.", id)));
 
         log.info("Рейтинг с id {} выдан.", id);
-        return mpa_rating;
+        return mpa;
     }
 }

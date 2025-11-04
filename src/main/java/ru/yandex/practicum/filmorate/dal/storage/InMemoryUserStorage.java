@@ -60,7 +60,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void updateFriend (Long userId, Long friendId, FriendStatus status) {
+    public void updateFriend(Long userId, Long friendId, FriendStatus status) {
         throw new MethodNotImplementedException("Метод не реализован.");
     }
 
