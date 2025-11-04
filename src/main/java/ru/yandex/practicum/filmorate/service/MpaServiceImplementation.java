@@ -20,18 +20,18 @@ public class MpaServiceImplementation implements MpaService {
 
     @Override
     public List<Mpa> findAll() {
-        List<Mpa> mpas = mpaStorage.findAll();
+        List<Mpa> mpa = mpaStorage.findAll();
         log.info("Список рейтингов mpa выдан.");
-        return mpas;
+        return mpa;
     }
 
     @Override
     public Mpa findById(Long id) {
-        Mpa mpa = mpaStorage.findById(id)
+        Mpa mpa_rating = mpaStorage.findById(id)
                 .orElseThrow(() -> new NotFoundException(
                         String.format("Рейтинг mpa с id %d не найден.", id)));
 
         log.info("Рейтинг с id {} выдан.", id);
-        return mpa;
+        return mpa_rating;
     }
 }

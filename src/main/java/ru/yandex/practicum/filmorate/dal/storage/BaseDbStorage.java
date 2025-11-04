@@ -65,11 +65,11 @@ public class BaseDbStorage<T> {
         jdbc.update(query, params);
     }
 
-    protected boolean existsById(String query, Long id) {
+    protected boolean exists(String query, Object... params) {
         Boolean exists = jdbc.queryForObject(
                 query,
                 Boolean.class,
-                id
+                params
         );
         return Boolean.TRUE.equals(exists);
     }
