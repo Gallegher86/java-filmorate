@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FriendStatus;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -28,6 +29,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     private static final String UPDATE_FRIENDSHIP_QUERY = "UPDATE friends SET status = ? " +
             "WHERE user_id = ? AND friend_id = ?";
     private static final String REMOVE_FRIEND_QUERY = "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
+    private static final String FIND_FRIENDS_BY_USER_ID_QUERY = "SELECT friend_id FROM friends WHERE user_id = ?";
     private static final String FIND_FRIENDS_QUERY =
             "SELECT u.* " +
                     "FROM users u " +
@@ -125,5 +127,17 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     @Override
     public boolean friendshipExists(Long userId, Long friendId) {
         return exists(FRIENDSHIP_EXISTS_QUERY, userId, friendId);
+    }
+
+    private void loadFriends(User user) {
+        Long id = user.getId();
+
+        List<Long> friends = jdbc.query(
+                FIND_FRIENDS_BY_USER_ID_QUERY,
+                (rs, rowNum) -> rs.getLong("friend_id"),
+                id
+        );
+
+        user.setFriends(friends);
     }
 }
