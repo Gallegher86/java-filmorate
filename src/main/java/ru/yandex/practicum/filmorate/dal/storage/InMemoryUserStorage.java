@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.dal.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -41,12 +41,16 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User save(User user) {
+    public User update(User user) {
         users.put(user.getId(), user);
         log.trace("Пользователь с логином {} с id {} сохранен.", user.getLogin(), user.getId());
         return user;
     }
 
+    @Override
+    public boolean existsById(Long id) {
+        return users.containsKey(id);
+    }
     @Override
     public void clear() {
         users.clear();

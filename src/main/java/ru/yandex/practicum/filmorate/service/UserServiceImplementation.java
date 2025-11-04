@@ -2,18 +2,22 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.dal.storage.UserStorage;
 
 import java.util.List;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserServiceImplementation implements UserService {
     private final UserStorage userStorage;
+
+    public UserServiceImplementation(@Qualifier("userDbStorage") UserStorage userStorage) {
+        this.userStorage = userStorage;
+    }
 
     @Override
     public List<User> findAll() {
@@ -43,7 +47,7 @@ public class UserServiceImplementation implements UserService {
     public User update(User updatedUser) {
         checkUserId(updatedUser.getId());
 
-        User user = userStorage.save(updatedUser);
+        User user = userStorage.update(updatedUser);
         log.info("Обновленный пользователь с логином {} с id {} добавлен в список.",
                 user.getLogin(), user.getId());
         return user;
@@ -110,7 +114,7 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public void checkUserId(Long id) {
-        if (userStorage.findById(id).isEmpty()) {
+        if (!userStorage.existsById(id)) {
             String errorMessage = String.format("Пользователь с id %d не найден.", id);
             throw new NotFoundException(errorMessage);
         }
