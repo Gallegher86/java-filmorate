@@ -66,17 +66,20 @@ public class UserServiceImplementation implements UserService {
         boolean directExists = userStorage.friendshipExists(userId, friendId);
         boolean reverseExists = userStorage.friendshipExists(friendId, userId);
 
-        if (directExists && reverseExists) {
+        if (directExists) {
+            log.trace("Получен повторный запрос на добавление в друзья id {} с friendId {}.", userId, friendId);
             return;
         }
 
-        if (!reverseExists) {
-            userStorage.addFriend(userId, friendId, FriendStatus.PENDING);
-        } else {
+        if (reverseExists) {
             userStorage.addFriend(userId, friendId, FriendStatus.CONFIRMED);
             userStorage.updateFriend(friendId, userId, FriendStatus.CONFIRMED);
+            log.info("Пользователи с id {} и {} стали друзьями.", userId, friendId);
+            return;
         }
-        log.info("Пользователь с id {} добавил в друзья пользователя с friendId {}.", userId, friendId);
+
+        userStorage.addFriend(userId, friendId, FriendStatus.PENDING);
+        log.info("Пользователь с id {} отправил заявку в друзья пользователю с id {}.", userId, friendId);
     }
 
     @Override
