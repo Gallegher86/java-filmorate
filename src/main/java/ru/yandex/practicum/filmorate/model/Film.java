@@ -27,6 +27,7 @@ public class Film {
     private int duration;
     private Mpa mpa;
     private final Set<Genre> genres = new HashSet<>();
+    private final Set<Long> likes = new HashSet<>();
 
     public List<Genre> getGenres() {
         return genres.stream()
@@ -34,8 +35,17 @@ public class Film {
                 .toList();
     }
 
-    public void addGenres(List<Genre> filmGenres) {
+    public void setGenres(List<Genre> filmGenres) {
+        genres.clear();
         genres.addAll(filmGenres);
+    }
+
+    public void setLikes(List<Long> likesId) {
+        likes.addAll(likesId);
+    }
+
+    public HashSet<Long> getLikes() {
+        return new HashSet<>(likes);
     }
 }
 

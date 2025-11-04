@@ -76,8 +76,8 @@ class FilmControllerTest {
             .build();
 
     @BeforeEach
-    void addGenre() {
-        film.addGenres(List.of(genre));
+    void setGenre() {
+        film.setGenres(List.of(genre));
     }
 
     @Test
@@ -303,7 +303,7 @@ class FilmControllerTest {
                 .id(999L)
                 .name("WRONG_GENRE")
                 .build();
-        film.addGenres(List.of(wrongGenre));
+        film.setGenres(List.of(wrongGenre));
 
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)

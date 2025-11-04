@@ -25,6 +25,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String ADD_LIKE_QUERY = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
     private static final String EXISTS_BY_ID_QUERY = "SELECT EXISTS(SELECT 1 FROM films WHERE id = ?)";
+    private static final String FIND_LIKES_BY_FILM_ID_QUERY = "SELECT user_id FROM likes WHERE film_id = ?";
     private static final String FIND_POPULAR_QUERY =
             "SELECT f.*, COUNT(l.user_id) AS likes_count " +
                     "FROM films AS f " +
@@ -51,6 +52,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         for (Film film : films) {
             loadMpa(film);
             loadGenres(film);
+            loadLikes(film);
         }
 
         log.trace("Список фильмов в базе данных готов к выдаче.");
@@ -66,6 +68,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         for (Film film : films) {
             loadMpa(film);
             loadGenres(film);
+            loadLikes(film);
         }
 
         log.trace("Список {} популярных фильмов в базе данных готов к выдаче.", count);
@@ -84,6 +87,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         Film film = filmOpt.get();
         loadMpa(film);
         loadGenres(film);
+        loadLikes(film);
 
         log.trace("Фильм с id {} готов к выдаче.", id);
         return Optional.of(film);
@@ -184,7 +188,19 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         Long id = film.getId();
 
         List<Genre> genres = genreStorage.findByFilmId(id);
-        film.addGenres(genres);
+        film.setGenres(genres);
         log.debug("Жанры фильма с id {} выгружены из базы данных.", id);
+    }
+
+    private void loadLikes(Film film) {
+        Long id = film.getId();
+
+        List<Long> likes = jdbc.query(
+                FIND_LIKES_BY_FILM_ID_QUERY,
+                (rs, rowNum) -> rs.getLong("user_id"),
+                id
+        );
+
+        film.setLikes(likes);
     }
 }
