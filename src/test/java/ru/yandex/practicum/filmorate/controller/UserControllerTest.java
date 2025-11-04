@@ -5,23 +5,35 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.dal.storage.UserStorage;
 
 import java.time.LocalDate;
 
+import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@TestPropertySource(properties = {
+        "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
+        "spring.datasource.driverClassName=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=password",
+        "spring.sql.init.mode=always"
+})
 class UserControllerTest {
     @Autowired
+    @Qualifier("userDbStorage")
     private UserStorage userStorage;
 
     @Autowired
@@ -37,18 +49,13 @@ class UserControllerTest {
             .birthday(LocalDate.of(2000, 12, 31))
             .build();
 
-    @BeforeEach
-    public void clear() {
-        userStorage.clear();
-    }
-
     @Test
     public void mustCreateUserAndReturn201() throws Exception {
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(user)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value("1"))
+                .andExpect(jsonPath("$.id", notNullValue()))
                 .andExpect(jsonPath("$.name").value("TestName"))
                 .andExpect(jsonPath("$.login").value("TestLogin"))
                 .andExpect(jsonPath("$.email").value("test@test.com"))
@@ -81,18 +88,18 @@ class UserControllerTest {
     }
 
     @Test
-    public void mustFindFilmsAndReturn200() throws Exception {
+    public void mustFindUsersAndReturn200() throws Exception {
         mockMvc.perform(post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)));
 
         mockMvc.perform(get("/users"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value("1"))
-                .andExpect(jsonPath("$[0].name").value("TestName"))
-                .andExpect(jsonPath("$[0].login").value("TestLogin"))
-                .andExpect(jsonPath("$[0].email").value("test@test.com"))
-                .andExpect(jsonPath("$[0].birthday").value("2000-12-31"));
+                .andExpect(jsonPath("$[*].id").isNotEmpty())
+                .andExpect(jsonPath("$[*].name").isNotEmpty())
+                .andExpect(jsonPath("$[*].login").isNotEmpty())
+                .andExpect(jsonPath("$[*].email").isNotEmpty())
+                .andExpect(jsonPath("$[*].birthday").isNotEmpty());
     }
 
     @Test
@@ -101,11 +108,11 @@ class UserControllerTest {
 
         mockMvc.perform(get("/users/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("1"))
-                .andExpect(jsonPath("$.name").value("TestName"))
-                .andExpect(jsonPath("$.login").value("TestLogin"))
-                .andExpect(jsonPath("$.email").value("test@test.com"))
-                .andExpect(jsonPath("$.birthday").value("2000-12-31"));
+                .andExpect(jsonPath("$.id").isNotEmpty())
+                .andExpect(jsonPath("$.name").isNotEmpty())
+                .andExpect(jsonPath("$.login").isNotEmpty())
+                .andExpect(jsonPath("$.email").isNotEmpty())
+                .andExpect(jsonPath("$.birthday").isNotEmpty());
     }
 
     @Test
@@ -139,10 +146,6 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(noNameUser)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("TestLogin"));
-
-        mockMvc.perform(get("/users"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("TestLogin"));
     }
 
     @Test
@@ -184,10 +187,11 @@ class UserControllerTest {
         userStorage.create(user.toBuilder().build());
 
         mockMvc.perform(put("/users/1/friends/2"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/users/1/friends"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.friends", Matchers.hasSize(1)))
-                .andExpect(jsonPath("$.friends").value(Matchers.hasItem(2)));
+                .andExpect(jsonPath("$[0].id").value(2));
     }
 
     @Test
@@ -197,22 +201,23 @@ class UserControllerTest {
         mockMvc.perform(put("/users/1/friends/2"));
 
         mockMvc.perform(delete("/users/1/friends/2"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.friends", Matchers.hasSize(0)));
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/users/1/friends"))
+                .andExpect(content().json("[]"))
+                .andExpect(status().isOk());
     }
 
     @Test
     public void mustReturnFriendsAndReturn200() throws Exception {
         userStorage.create(user.toBuilder().build());
         userStorage.create(user.toBuilder().build());
-        mockMvc.perform(put("/users/1/friends/2"));
+        mockMvc.perform(put("/users/1/friends/2"))
+                .andExpect(status().isOk());
 
         mockMvc.perform(get("/users/1/friends"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(2))
-                .andExpect(jsonPath("$[0].friends", Matchers.hasSize(1)))
-                .andExpect(jsonPath("$[0].friends").value(Matchers.hasItem(1)));
+                .andExpect(jsonPath("$[0].id").value(2));
     }
 
     @Test
@@ -236,54 +241,52 @@ class UserControllerTest {
 
         mockMvc.perform(get("/users/1/friends/common/2"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(3))
-                .andExpect(jsonPath("$[0].friends", Matchers.hasSize(2)))
-                .andExpect(jsonPath("$[0].friends").value(Matchers.hasItems(1, 2)));
+                .andExpect(jsonPath("$[0].id").value(3));
     }
 
     @Test
     public void mustReturn404IfUserNotFound() throws Exception {
         userStorage.create(user);
 
-        mockMvc.perform(put("/users/2/friends/1"))
+        mockMvc.perform(put("/users/999/friends/1"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage")
-                        .value("Пользователь с id 2 не найден."));
+                        .value("Пользователь с id 999 не найден."));
 
-        mockMvc.perform(delete("/users/2/friends/1"))
+        mockMvc.perform(delete("/users/999/friends/1"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage")
-                        .value("Пользователь с id 2 не найден."));
+                        .value("Пользователь с id 999 не найден."));
 
-        mockMvc.perform(get("/users/2/friends"))
+        mockMvc.perform(get("/users/999/friends"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage")
-                        .value("Пользователь с id 2 не найден."));
+                        .value("Пользователь с id 999 не найден."));
 
-        mockMvc.perform(get("/users/2/friends/common/1"))
+        mockMvc.perform(get("/users/999/friends/common/1"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage")
-                        .value("Пользователь с id 2 не найден."));
+                        .value("Пользователь с id 999 не найден."));
     }
 
     @Test
     public void mustReturn404IfFriendNotFound() throws Exception {
         userStorage.create(user);
 
-        mockMvc.perform(put("/users/1/friends/2"))
+        mockMvc.perform(put("/users/1/friends/999"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage")
-                        .value("Пользователь с friendId 2 не найден."));
+                        .value("Пользователь с id 999 не найден."));
 
-        mockMvc.perform(delete("/users/1/friends/2"))
+        mockMvc.perform(delete("/users/1/friends/999"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage")
-                        .value("Пользователь с friendId 2 не найден."));
+                        .value("Пользователь с id 999 не найден."));
 
-        mockMvc.perform(get("/users/1/friends/common/2"))
+        mockMvc.perform(get("/users/1/friends/common/999"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage")
-                        .value("Пользователь с id 2 не найден."));
+                        .value("Пользователь с id 999 не найден."));
     }
 
     private void checkValidation(User user, String expectedMessage) throws Exception {

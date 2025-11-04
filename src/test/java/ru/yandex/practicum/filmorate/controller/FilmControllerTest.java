@@ -29,7 +29,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@AutoConfigureTestDatabase
 @TestPropertySource(properties = {
         "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
         "spring.datasource.driverClassName=org.h2.Driver",
@@ -138,9 +137,7 @@ class FilmControllerTest {
 
     @Test
     public void mustFindFilmByIdAndReturn200() throws Exception {
-        System.out.println(film.getReleaseDate());
         filmStorage.create(film);
-        System.out.println(film.getReleaseDate());
 
         mockMvc.perform(get("/films/1"))
                 .andExpect(status().isOk())
