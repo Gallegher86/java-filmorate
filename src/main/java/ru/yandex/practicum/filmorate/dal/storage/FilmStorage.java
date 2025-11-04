@@ -16,11 +16,15 @@ public interface FilmStorage {
 
     Film update(Film newFilm);
 
-    boolean existsById(Long id);
-
     void addLike(Long id, Long userId);
 
     void deleteLike(Long id, Long userId);
+
+    boolean existsById(Long id);
+
+    boolean mpaExistsById(Long id);
+
+    boolean genreExistsById(List<Long> genreIds);
 
     void clear();
 }

@@ -11,4 +11,6 @@ public interface GenreStorage {
     Optional<Genre> findByGenreId(Long id);
 
     List<Genre> findByFilmId(Long id);
+
+    boolean existsById(List<Long> genreIds);
 }

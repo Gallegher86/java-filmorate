@@ -11,4 +11,6 @@ public interface MpaStorage {
     Optional<Mpa> findById(Long id);
 
     Optional<Mpa> findByFilmId(Long id);
+
+    boolean existsById(Long id);
 }

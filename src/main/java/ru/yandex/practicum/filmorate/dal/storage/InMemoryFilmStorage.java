@@ -46,11 +46,6 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public boolean existsById(Long id) {
-        return films.containsKey(id);
-    }
-
-    @Override
     public void addLike(Long id, Long userId) {
         throw new MethodNotImplementedException("Метод не реализован.");
     }
@@ -60,6 +55,20 @@ public class InMemoryFilmStorage implements FilmStorage {
         throw new MethodNotImplementedException("Метод не реализован.");
     }
 
+    @Override
+    public boolean existsById(Long id) {
+        return films.containsKey(id);
+    }
+
+    @Override
+    public boolean mpaExistsById(Long id) {
+        throw new MethodNotImplementedException("Метод не реализован.");
+    }
+
+    @Override
+    public boolean genreExistsById(List<Long> genreIds) {
+        throw new MethodNotImplementedException("Метод не реализован.");
+    }
 
     @Override
     public void clear() {
