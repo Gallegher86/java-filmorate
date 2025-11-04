@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.time.LocalDate;
@@ -18,18 +19,25 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @Transactional
 @AutoConfigureTestDatabase
-class MpaDbStorageTest {
+class GenreDbStorageTest {
     @Autowired
-    private MpaDbStorage mpaStorage;
+    private GenreDbStorage genreStorage;
 
     @Autowired
     private FilmDbStorage filmStorage;
 
+    Genre genre;
     Mpa mpa;
     Film film;
 
+
     @BeforeEach
     void setup() {
+        genre = Genre.builder()
+                .id(1L)
+                .name("Комедия")
+                .build();
+
         mpa = Mpa.builder()
                 .id(1L)
                 .name("G")
@@ -42,37 +50,42 @@ class MpaDbStorageTest {
                 .duration(200)
                 .mpa(mpa)
                 .build();
+
+        film.setGenres(List.of(genre));
     }
 
     @Test
     void testFindAll() {
-        List<Mpa> mpas = mpaStorage.findAll();
-        assertNotNull(mpas);
-        assertTrue(mpas.size() >= 5, "Должно быть как минимум 5 MPA");
-        assertTrue(mpas.stream().anyMatch(m -> m.getName().equals("G")));
+        List<Genre> genres = genreStorage.findAll();
+        assertNotNull(genres);
+        assertFalse(genres.isEmpty(), "Список жанров не должен быть пустым");
+        assertTrue(genres.stream().anyMatch(g -> g.getName().equals("Комедия")));
     }
 
     @Test
-    void testFindById() {
-        Optional<Mpa> mpaOpt = mpaStorage.findById(1L);
-        assertTrue(mpaOpt.isPresent());
-        assertEquals("G", mpaOpt.get().getName());
+    void testFindByGenreId() {
+        Optional<Genre> genreOpt = genreStorage.findByGenreId(1L);
+        assertTrue(genreOpt.isPresent());
+        assertEquals("Комедия", genreOpt.get().getName());
 
-        Optional<Mpa> missing = mpaStorage.findById(999L);
-        assertTrue(missing.isEmpty(), "Не существующий id должен возвращать empty");
+        Optional<Genre> missing = genreStorage.findByGenreId(999L);
+        assertTrue(missing.isEmpty());
     }
 
     @Test
     void testFindByFilmId() {
         film = filmStorage.create(film);
-        Optional<Mpa> mpaOpt = mpaStorage.findByFilmId(film.getId());
-        assertTrue(mpaOpt.isPresent());
-        assertEquals(film.getMpa().getName(), mpaOpt.get().getName());
+        List<Genre> filmGenres = genreStorage.findByFilmId(film.getId());
+        assertNotNull(filmGenres);
+        assertEquals(1, filmGenres.size());
+        assertEquals("Комедия", filmGenres.get(0).getName());
     }
 
     @Test
     void testExistsById() {
-        assertTrue(mpaStorage.existsById(1L));
-        assertFalse(mpaStorage.existsById(999L));
+        assertTrue(genreStorage.existsById(List.of(1L)));
+        assertFalse(genreStorage.existsById(List.of(999L)));
+        assertFalse(genreStorage.existsById(List.of(1L, 999L)));
     }
+
 }
