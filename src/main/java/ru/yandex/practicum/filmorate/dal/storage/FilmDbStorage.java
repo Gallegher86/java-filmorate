@@ -25,7 +25,17 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "duration = ?, mpa_id = ? WHERE id = ?";
     private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO film_genre(film_id, genre_id) VALUES (?, ?)";
     private static final String DELETE_FILM_GENRE_QUERY = "DELETE FROM film_genre WHERE film_id = ?";
+    private static final String ADD_LIKE_QUERY = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
+    private static final String DELETE_LIKE_QUERY = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
     private static final String DELETE_ALL_FILMS_QUERY = "DELETE FROM films";
+    private static final String EXISTS_BY_ID_QUERY = "SELECT EXISTS(SELECT 1 FROM films WHERE id = ?)";
+    private static final String FIND_POPULAR_QUERY =
+            "SELECT f.*, COUNT(l.user_id) AS likes_count " +
+                    "FROM films AS f " +
+                    "LEFT JOIN likes AS l ON f.id = l.film_id " +
+                    "GROUP BY f.id " +
+                    "ORDER BY likes_count DESC " +
+                    "LIMIT ?;";
 
     private final GenreStorage genreStorage;
     private final MpaStorage mpaStorage;
@@ -43,14 +53,26 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         log.debug("Фильмы выгружены из базы данных.");
 
         for (Film film : films) {
-            Long id = film.getId();
             loadMpa(film);
-            log.debug("findAll. Рейтинг mpa фильма с id {} выгружен из базы данных.", id);
             loadGenres(film);
-            log.debug("findAll. Жанры фильма с id {} выгружены из базы данных.", id);
         }
 
         log.trace("Список фильмов в базе данных готов к выдаче.");
+        return films;
+    }
+
+    @Override
+    public List<Film> findPopular(long count) {
+        List<Film> films = findMany(FIND_POPULAR_QUERY, count);
+
+        log.debug("{} популярных фильмов выгружены из базы данных.", count);
+
+        for (Film film : films) {
+            loadMpa(film);
+            loadGenres(film);
+        }
+
+        log.trace("Список {} популярных фильмов в базе данных готов к выдаче.", count);
         return films;
     }
 
@@ -65,9 +87,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         Film film = filmOpt.get();
         loadMpa(film);
-        log.debug("findById. Рейтинг mpa фильма с id {} выгружен из базы данных.", id);
         loadGenres(film);
-        log.debug("findById. Жанры фильма с id {} выгружены из базы данных.", id);
+
         log.trace("Фильм с id {} готов к выдаче.", id);
         return Optional.of(film);
     }
@@ -85,11 +106,9 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 film.getDuration(),
                 film.getMpa().getId()
         );
-        log.trace("Фильм помещен в films БД. Сгенерирован новый id для фильма {}", id);
         film.setId(id);
         saveGenres(film);
-        log.debug("create. Жанры фильма c id {} помещены в film_genre БД.", film.getId());
-        log.trace("Фильм {} с id {} сохранен.", film.getName(), film.getId());
+        log.trace("Фильм {} с id {} сохранен в БД.", film.getName(), film.getId());
         return film;
     }
 
@@ -120,12 +139,17 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public boolean existsById(Long id) {
-        Integer count = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM films WHERE id = ?",
-                Integer.class,
-                id
-        );
-        return count != null && count > 0;
+        return existsById(EXISTS_BY_ID_QUERY, id);
+    }
+
+    @Override
+    public void addLike(Long id, Long userId) {
+        update(ADD_LIKE_QUERY, id, userId);
+    }
+
+    @Override
+    public void deleteLike(Long id, Long userId) {
+        update(DELETE_LIKE_QUERY, id, userId);
     }
 
     @Override
@@ -134,11 +158,16 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     }
 
     private void saveGenres(Film film) {
+        if (film.getGenres().isEmpty()) {
+            return;
+        }
+
         Long id = film.getId();
 
         for (Genre genre : film.getGenres()) {
-            execute(INSERT_FILM_GENRE_QUERY, id, genre.getId());
+            update(INSERT_FILM_GENRE_QUERY, id, genre.getId());
         }
+        log.debug("Жанры фильма c id {} помещены в film_genre БД.", id);
     }
 
     private void deleteFilmGenres(Long filmId) {
@@ -150,6 +179,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         film.setMpa(mpaStorage.findByFilmId(id)
                 .orElse(null));
+        log.debug("Рейтинг mpa фильма с id {} выгружен из базы данных.", id);
     }
 
     private void loadGenres(Film film) {
@@ -157,9 +187,10 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         List<Genre> genres = genreStorage.findByFilmId(id);
         film.addGenres(genres);
+        log.debug("Жанры фильма с id {} выгружены из базы данных.", id);
     }
 
-    private void checkMpa (Film film) {
+    private void checkMpa(Film film) {
         Mpa mpa = film.getMpa();
         List<Mpa> validMpa = mpaStorage.findAll();
 
@@ -169,7 +200,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         }
     }
 
-    private void checkGenre (Film film) {
+    private void checkGenre(Film film) {
         List<Genre> genres = film.getGenres();
         List<Genre> dbGenres = genreStorage.findAll();
 

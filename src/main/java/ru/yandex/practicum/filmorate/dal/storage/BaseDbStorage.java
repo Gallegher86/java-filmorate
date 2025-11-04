@@ -64,4 +64,13 @@ public class BaseDbStorage<T> {
     protected void execute(String query, Object... params) {
         jdbc.update(query, params);
     }
+
+    protected boolean existsById(String query, Long id) {
+        Boolean exists = jdbc.queryForObject(
+                query,
+                Boolean.class,
+                id
+        );
+        return Boolean.TRUE.equals(exists);
+    }
 }

@@ -8,6 +8,8 @@ import java.util.Optional;
 public interface FilmStorage {
     List<Film> findAll();
 
+    List<Film> findPopular(long count);
+
     Optional<Film> findById(Long id);
 
     Film create(Film film);
@@ -15,6 +17,10 @@ public interface FilmStorage {
     Film update(Film newFilm);
 
     boolean existsById(Long id);
+
+    void addLike(Long id, Long userId);
+
+    void deleteLike(Long id, Long userId);
 
     void clear();
 }
