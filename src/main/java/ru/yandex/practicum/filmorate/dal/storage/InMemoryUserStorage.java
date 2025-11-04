@@ -26,10 +26,7 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<User> findFriends(Long id) {
-        User user = users.get(id);
-        return users.values().stream()
-                .filter(friend -> user.getFriends().contains(friend.getId()))
-                .toList();
+        throw new MethodNotImplementedException("Метод не реализован.");
     }
 
     @Override
@@ -77,13 +74,6 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public boolean friendshipExists(Long userId, Long friendId) {
         throw new MethodNotImplementedException("Метод не реализован.");
-    }
-
-    @Override
-    public void clear() {
-        users.clear();
-        idCounter = 1L;
-        log.trace("UserStorage очищен.");
     }
 
     private Long generateNextId() {

@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.exceptions.MethodNotImplementedException;
 import ru.yandex.practicum.filmorate.model.FriendStatus;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -126,10 +125,5 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     @Override
     public boolean friendshipExists(Long userId, Long friendId) {
         return exists(FRIENDSHIP_EXISTS_QUERY, userId, friendId);
-    }
-
-    @Override
-    public void clear() {
-        throw new MethodNotImplementedException("Метод не реализован.");
     }
 }

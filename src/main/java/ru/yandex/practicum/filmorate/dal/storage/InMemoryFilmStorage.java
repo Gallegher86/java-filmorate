@@ -70,13 +70,6 @@ public class InMemoryFilmStorage implements FilmStorage {
         throw new MethodNotImplementedException("Метод не реализован.");
     }
 
-    @Override
-    public void clear() {
-        films.clear();
-        idCounter = 1L;
-        log.trace("FilmStorage очищен.");
-    }
-
     private Long generateNextId() {
         return idCounter++;
     }

@@ -27,19 +27,6 @@ public class Film {
     private int duration;
     private Mpa mpa;
     private final Set<Genre> genres = new HashSet<>();
-    private final Set<Long> likes = new HashSet<>();
-
-    public void addLikeId(Long id) {
-        likes.add(id);
-    }
-
-    public void removeLikeId(Long id) {
-        likes.remove(id);
-    }
-
-    public Set<Long> getLikes() {
-        return new HashSet<>(likes);
-    }
 
     public List<Genre> getGenres() {
         return genres.stream()

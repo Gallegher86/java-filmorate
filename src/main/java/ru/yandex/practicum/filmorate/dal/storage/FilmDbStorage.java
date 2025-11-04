@@ -24,7 +24,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String DELETE_FILM_GENRE_QUERY = "DELETE FROM film_genre WHERE film_id = ?";
     private static final String ADD_LIKE_QUERY = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
-    private static final String DELETE_ALL_FILMS_QUERY = "DELETE FROM films";
     private static final String EXISTS_BY_ID_QUERY = "SELECT EXISTS(SELECT 1 FROM films WHERE id = ?)";
     private static final String FIND_POPULAR_QUERY =
             "SELECT f.*, COUNT(l.user_id) AS likes_count " +
@@ -154,11 +153,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public boolean genreExistsById(List<Long> genreIds) {
         return genreStorage.existsById(genreIds);
-    }
-
-    @Override
-    public void clear() {
-        execute(DELETE_ALL_FILMS_QUERY);
     }
 
     private void saveGenres(Film film) {

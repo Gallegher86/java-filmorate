@@ -25,6 +25,4 @@ public interface FilmStorage {
     boolean mpaExistsById(Long id);
 
     boolean genreExistsById(List<Long> genreIds);
-
-    void clear();
 }
