@@ -28,17 +28,8 @@ public class User {
     private String name;
     @PastOrPresent(message = "Дата рождения не может быть в будущем.")
     private LocalDate birthday;
-    private final Set<Long> friends = new HashSet<>();
 
     public String getName() {
         return (name == null || name.isBlank()) ? login : name;
-    }
-
-    public void setFriends(List<Long> friendsId) {
-        friends.addAll(friendsId);
-    }
-
-    public HashSet<Long> getFriends() {
-        return new HashSet<>(friends);
     }
 }

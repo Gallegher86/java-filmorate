@@ -26,26 +26,28 @@ public class Film {
     @Positive (message = "Продолжительность фильма должна быть положительной.")
     private int duration;
     private Mpa mpa;
-    private final Set<Genre> genres = new HashSet<>();
-    private final Set<Long> likes = new HashSet<>();
+    private Set<Genre> genres;
+    private Set<Long> likes;
 
     public List<Genre> getGenres() {
-        return genres.stream()
+        return genres == null ? List.of() : genres.stream()
                 .sorted(Comparator.comparingLong(Genre::getId))
                 .toList();
     }
 
     public void setGenres(List<Genre> filmGenres) {
+        if (genres == null) genres = new HashSet<>();
         genres.clear();
         genres.addAll(filmGenres);
     }
 
-    public void setLikes(List<Long> likesId) {
-        likes.addAll(likesId);
+    public HashSet<Long> getLikes() {
+        return likes == null ? new HashSet<>() : new HashSet<>(likes);
     }
 
-    public HashSet<Long> getLikes() {
-        return new HashSet<>(likes);
+    public void setLikes(List<Long> likesId) {
+        if (likes == null) likes = new HashSet<>();
+        likes.addAll(likesId);
     }
 }
 

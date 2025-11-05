@@ -127,16 +127,4 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     public boolean friendshipExists(Long userId, Long friendId) {
         return exists(FRIENDSHIP_EXISTS_QUERY, userId, friendId);
     }
-
-    private void loadFriends(User user) {
-        Long id = user.getId();
-
-        List<Long> friends = jdbc.query(
-                FIND_FRIENDS_BY_USER_ID_QUERY,
-                (rs, rowNum) -> rs.getLong("friend_id"),
-                id
-        );
-
-        user.setFriends(friends);
-    }
 }

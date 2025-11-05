@@ -14,8 +14,6 @@ import java.util.*;
 @Slf4j
 @Repository
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
-    private static final String FIND_ALL_QUERY = "SELECT * FROM films";
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE id = ?";
     private static final String INSERT_QUERY = "INSERT INTO films(name, description, release_date, duration, mpa_id) " +
             "VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?," +
@@ -25,14 +23,48 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String ADD_LIKE_QUERY = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
     private static final String EXISTS_BY_ID_QUERY = "SELECT EXISTS(SELECT 1 FROM films WHERE id = ?)";
-    private static final String FIND_LIKES_BY_FILM_ID_QUERY = "SELECT user_id FROM likes WHERE film_id = ?";
-    private static final String FIND_POPULAR_QUERY =
-            "SELECT f.*, COUNT(l.user_id) AS likes_count " +
-                    "FROM films AS f " +
-                    "LEFT JOIN likes AS l ON f.id = l.film_id " +
-                    "GROUP BY f.id " +
-                    "ORDER BY likes_count DESC " +
-                    "LIMIT ?;";
+
+    private static final String FIND_BY_ID_QUERY = "SELECT " +
+            "f.id, f.name, f.description, f.release_date, f.duration, f.mpa_id, m.name AS mpa_name, " +
+            "(SELECT GROUP_CONCAT(CONCAT(g.id, ':', g.name) SEPARATOR ',') " +
+            "FROM film_genre fg " +
+            "JOIN genres g ON fg.genre_id = g.id " +
+            "WHERE fg.film_id = f.id) AS genres, " +
+            "(SELECT GROUP_CONCAT(l.user_id SEPARATOR ',') " +
+                "FROM likes l " +
+                "WHERE l.film_id = f.id) AS likes " +
+            "FROM films f " +
+            "LEFT JOIN mpa m ON f.mpa_id = m.id " +
+            "WHERE f.id = ?;";
+
+    private static final String FIND_ALL_QUERY = "SELECT " +
+            "f.id, f.name, f.description, f.release_date, f.duration, f.mpa_id, m.name AS mpa_name, " +
+            "(SELECT GROUP_CONCAT(CONCAT(g.id, ':', g.name) SEPARATOR ',') " +
+                "FROM film_genre fg " +
+                "JOIN genres g ON fg.genre_id = g.id " +
+                "WHERE fg.film_id = f.id) AS genres, " +
+            "(SELECT GROUP_CONCAT(l.user_id SEPARATOR ',') " +
+                "FROM likes l " +
+                "WHERE l.film_id = f.id) AS likes " +
+            "FROM films f " +
+            "LEFT JOIN mpa m ON f.mpa_id = m.id;";
+
+    private static final String FIND_POPULAR_QUERY = "SELECT " +
+            "f.id, f.name, f.description, f.release_date, f.duration, f.mpa_id, m.name AS mpa_name, " +
+            "(SELECT GROUP_CONCAT(CONCAT(g.id, ':', g.name) SEPARATOR ',') " +
+                "FROM film_genre fg " +
+                "JOIN genres g ON fg.genre_id = g.id " +
+                "WHERE fg.film_id = f.id) AS genres, " +
+            "(SELECT GROUP_CONCAT(l.user_id SEPARATOR ',') " +
+                "FROM likes l " +
+                "WHERE l.film_id = f.id) AS likes, " +
+                "COUNT(l.user_id) AS like_count " +
+            "FROM films f " +
+            "LEFT JOIN mpa m ON f.mpa_id = m.id " +
+            "LEFT JOIN likes l ON f.id = l.film_id " +
+            "GROUP BY f.id " +
+            "ORDER BY like_count DESC " +
+            "LIMIT ?";
 
     private final GenreStorage genreStorage;
     private final MpaStorage mpaStorage;
@@ -47,14 +79,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public List<Film> findAll() {
         List<Film> films = findMany(FIND_ALL_QUERY);
-        log.debug("Фильмы выгружены из базы данных.");
-
-        for (Film film : films) {
-            loadMpa(film);
-            loadGenres(film);
-            loadLikes(film);
-        }
-
         log.trace("Список фильмов в базе данных готов к выдаче.");
         return films;
     }
@@ -62,15 +86,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public List<Film> findPopular(long count) {
         List<Film> films = findMany(FIND_POPULAR_QUERY, count);
-
-        log.debug("{} популярных фильмов выгружены из базы данных.", count);
-
-        for (Film film : films) {
-            loadMpa(film);
-            loadGenres(film);
-            loadLikes(film);
-        }
-
         log.trace("Список {} популярных фильмов в базе данных готов к выдаче.", count);
         return films;
     }
@@ -78,19 +93,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public Optional<Film> findById(Long id) {
         Optional<Film> filmOpt = findOne(FIND_BY_ID_QUERY, id);
-
-        if (filmOpt.isEmpty()) {
-            log.debug("findById. Фильм с id {} отсутствует в базе данных.", id);
-            return filmOpt;
-        }
-
-        Film film = filmOpt.get();
-        loadMpa(film);
-        loadGenres(film);
-        loadLikes(film);
-
         log.trace("Фильм с id {} готов к выдаче.", id);
-        return Optional.of(film);
+        return filmOpt;
     }
 
     @Override
@@ -174,33 +178,5 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     private void deleteFilmGenres(Long filmId) {
         delete(DELETE_FILM_GENRE_QUERY, filmId);
-    }
-
-    private void loadMpa(Film film) {
-        Long id = film.getId();
-
-        film.setMpa(mpaStorage.findByFilmId(id)
-                .orElse(null));
-        log.debug("Рейтинг mpa фильма с id {} выгружен из базы данных.", id);
-    }
-
-    private void loadGenres(Film film) {
-        Long id = film.getId();
-
-        List<Genre> genres = genreStorage.findByFilmId(id);
-        film.setGenres(genres);
-        log.debug("Жанры фильма с id {} выгружены из базы данных.", id);
-    }
-
-    private void loadLikes(Film film) {
-        Long id = film.getId();
-
-        List<Long> likes = jdbc.query(
-                FIND_LIKES_BY_FILM_ID_QUERY,
-                (rs, rowNum) -> rs.getLong("user_id"),
-                id
-        );
-
-        film.setLikes(likes);
     }
 }
