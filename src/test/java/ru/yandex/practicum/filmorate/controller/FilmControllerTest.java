@@ -5,28 +5,43 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.dal.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.dal.storage.UserStorage;
 
 import java.time.LocalDate;
+import java.util.List;
 
+import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@TestPropertySource(properties = {
+        "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
+        "spring.datasource.driverClassName=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=password",
+        "spring.sql.init.mode=always"
+})
 class FilmControllerTest {
     @Autowired
+    @Qualifier("filmDbStorage")
     private FilmStorage filmStorage;
 
     @Autowired
+    @Qualifier("userDbStorage")
     private UserStorage userStorage;
 
     @Autowired
@@ -35,11 +50,22 @@ class FilmControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    private Mpa mpa = Mpa.builder()
+            .id(1L)
+            .name("G")
+            .build();
+
+    private Genre genre = Genre.builder()
+            .id(1L)
+            .name("Комедия")
+            .build();
+
     private Film film = Film.builder()
             .name("TestMovie")
             .description("TestDescription")
             .releaseDate(LocalDate.of(1895, 12, 28))
             .duration(200)
+            .mpa(mpa)
             .build();
 
     private User user = User.builder()
@@ -50,9 +76,8 @@ class FilmControllerTest {
             .build();
 
     @BeforeEach
-    public void clear() {
-        filmStorage.clear();
-        userStorage.clear();
+    void setGenre() {
+        film.setGenres(List.of(genre));
     }
 
     @Test
@@ -61,7 +86,7 @@ class FilmControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(film)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value("1"))
+                .andExpect(jsonPath("$.id", notNullValue()))
                 .andExpect(jsonPath("$.name").value("TestMovie"))
                 .andExpect(jsonPath("$.description").value("TestDescription"))
                 .andExpect(jsonPath("$.releaseDate").value("1895-12-28"))
@@ -80,6 +105,7 @@ class FilmControllerTest {
                 .description("UpdatedDescription")
                 .releaseDate(LocalDate.of(2010, 12, 31))
                 .duration(120)
+                .mpa(mpa)
                 .build();
 
         mockMvc.perform(put("/films")
@@ -180,8 +206,7 @@ class FilmControllerTest {
         userStorage.create(user);
 
         mockMvc.perform(put("/films/1/like/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.likes").value(Matchers.hasItem(1)));
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -191,57 +216,45 @@ class FilmControllerTest {
         mockMvc.perform(put("/films/1/like/1"));
 
         mockMvc.perform(delete("/films/1/like/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.likes").isEmpty());
+                .andExpect(status().isOk());
     }
 
     @Test
     public void mustReturn404IfAddOrDeleteLikeToFilmWhichNotExist() throws Exception {
         userStorage.create(user);
 
-        mockMvc.perform(put("/films/1/like/1"))
+        mockMvc.perform(put("/films/999/like/1"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage")
-                        .value("Фильм с id 1 не найден."));
+                        .value("Фильм с id 999 не найден."));
 
-        mockMvc.perform(delete("/films/1/like/1"))
+        mockMvc.perform(delete("/films/999/like/1"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage")
-                        .value("Фильм с id 1 не найден."));
+                        .value("Фильм с id 999 не найден."));
     }
 
     @Test
     public void mustReturn404IfAddOrDeleteLikeFromUserWhichNotExist() throws Exception {
         filmStorage.create(film);
 
-        mockMvc.perform(put("/films/1/like/1"))
+        mockMvc.perform(put("/films/1/like/999"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage")
-                        .value("Пользователь с id 1 не найден."));
+                        .value("Пользователь с id 999 не найден."));
 
-        mockMvc.perform(delete("/films/1/like/1"))
+        mockMvc.perform(delete("/films/1/like/999"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage")
-                        .value("Пользователь с id 1 не найден."));
-    }
-
-    @Test
-    public void mustReturn400IfDeleteLikeFromUserWhichDidntAddLike() throws Exception {
-        filmStorage.create(film);
-        userStorage.create(user);
-
-        mockMvc.perform(delete("/films/1/like/1"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorMessage")
-                        .value("Пользователь с userId 1 не ставил лайк фильму c id 1."));
+                        .value("Пользователь с id 999 не найден."));
     }
 
     @Test
     public void mustGetPopularFilmsAndReturn200() throws Exception {
         filmStorage.create(film);
-        Film popularFilm = filmStorage.create(film);
+        filmStorage.create(film);
         userStorage.create(user);
-        popularFilm.addLikeId(user.getId());
+        mockMvc.perform(put("/films/2/like/1"));
 
         mockMvc.perform(get("/films/popular?count=1"))
                 .andExpect(status().isOk())
@@ -266,6 +279,38 @@ class FilmControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessage")
                         .value("Параметр {count} не может быть отрицательным."));
+    }
+
+    @Test
+    public void mustReturn404IfMpaIsWrong() throws Exception {
+        Mpa wrongMpa = Mpa.builder()
+                .id(999L)
+                .name("WRONG_MPA")
+                .build();
+        film.setMpa(wrongMpa);
+
+        mockMvc.perform(post("/films")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(film)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Рейтинг mpa c id 999 не найден."));
+    }
+
+    @Test
+    public void mustReturn404IfGenreIsWrong() throws Exception {
+        Genre wrongGenre = Genre.builder()
+                .id(999L)
+                .name("WRONG_GENRE")
+                .build();
+        film.setGenres(List.of(wrongGenre));
+
+        mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(film)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage")
+                        .value("Жанр не найден."));
     }
 
     private void checkValidation(Film film, String expectedMessage) throws Exception {

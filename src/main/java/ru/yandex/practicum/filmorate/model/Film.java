@@ -8,8 +8,7 @@ import org.hibernate.validator.constraints.Length;
 import ru.yandex.practicum.filmorate.validation.annotation.ValidReleaseDate;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Builder (toBuilder = true)
 @Getter
@@ -26,18 +25,29 @@ public class Film {
     private LocalDate releaseDate;
     @Positive (message = "Продолжительность фильма должна быть положительной.")
     private int duration;
-    private final Set<Long> likes = new HashSet<>();
+    private Mpa mpa;
+    private Set<Genre> genres;
+    private Set<Long> likes;
 
-    public void addLikeId(Long id) {
-        likes.add(id);
+    public List<Genre> getGenres() {
+        return genres == null ? List.of() : genres.stream()
+                .sorted(Comparator.comparingLong(Genre::getId))
+                .toList();
     }
 
-    public void removeLikeId(Long id) {
-        likes.remove(id);
+    public void setGenres(List<Genre> filmGenres) {
+        if (genres == null) genres = new HashSet<>();
+        genres.clear();
+        genres.addAll(filmGenres);
     }
 
-    public Set<Long> getLikes() {
-        return new HashSet<>(likes);
+    public HashSet<Long> getLikes() {
+        return likes == null ? new HashSet<>() : new HashSet<>(likes);
+    }
+
+    public void setLikes(List<Long> likesId) {
+        if (likes == null) likes = new HashSet<>();
+        likes.addAll(likesId);
     }
 }
 

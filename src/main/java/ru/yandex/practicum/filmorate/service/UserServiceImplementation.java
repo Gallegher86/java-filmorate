@@ -1,19 +1,23 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.model.FriendStatus;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.dal.storage.UserStorage;
 
 import java.util.List;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserServiceImplementation implements UserService {
     private final UserStorage userStorage;
+
+    public UserServiceImplementation(@Qualifier("userDbStorage") UserStorage userStorage) {
+        this.userStorage = userStorage;
+    }
 
     @Override
     public List<User> findAll() {
@@ -43,47 +47,58 @@ public class UserServiceImplementation implements UserService {
     public User update(User updatedUser) {
         checkUserId(updatedUser.getId());
 
-        User user = userStorage.save(updatedUser);
+        User user = userStorage.update(updatedUser);
         log.info("Обновленный пользователь с логином {} с id {} добавлен в список.",
                 user.getLogin(), user.getId());
         return user;
     }
 
     @Override
-    public User addFriend(Long id, Long friendId) {
-        if (id.equals(friendId)) {
+    public void addFriend(Long userId, Long friendId) {
+        if (userId.equals(friendId)) {
             throw new IllegalArgumentException(
-                    String.format("Пользователь с id %d не может быть добавлен в друзья к самому себе.", id));
+                    String.format("Пользователь с id %d не может быть добавлен в друзья к самому себе.", userId));
         }
 
-        User user = userStorage.findById(id)
-                .orElseThrow(() -> new NotFoundException(
-                        String.format("Пользователь с id %d не найден.", id)));
+        checkUserId(userId);
+        checkUserId(friendId);
 
-        User friend = userStorage.findById(friendId)
-                .orElseThrow(() -> new NotFoundException(
-                        String.format("Пользователь с friendId %d не найден.", friendId)));
+        boolean directExists = userStorage.friendshipExists(userId, friendId);
+        boolean reverseExists = userStorage.friendshipExists(friendId, userId);
 
-        user.addFriendId(friendId);
-        friend.addFriendId(id);
-        log.info("Пользователь с id {} добавил в друзья пользователя с friendId {}.", id, friendId);
-        return user;
+        if (directExists) {
+            log.trace("Получен повторный запрос на добавление в друзья id {} с friendId {}.", userId, friendId);
+            return;
+        }
+
+        if (reverseExists) {
+            userStorage.addFriend(userId, friendId, FriendStatus.CONFIRMED);
+            userStorage.updateFriend(friendId, userId, FriendStatus.CONFIRMED);
+            log.info("Пользователи с id {} и {} стали друзьями.", userId, friendId);
+            return;
+        }
+
+        userStorage.addFriend(userId, friendId, FriendStatus.PENDING);
+        log.info("Пользователь с id {} отправил заявку в друзья пользователю с id {}.", userId, friendId);
     }
 
     @Override
-    public User removeFriend(Long id, Long friendId) {
-        User user = userStorage.findById(id)
-                .orElseThrow(() -> new NotFoundException(
-                        String.format("Пользователь с id %d не найден.", id)));
+    public void removeFriend(Long userId, Long friendId) {
+        checkUserId(userId);
+        checkUserId(friendId);
 
-        User friend = userStorage.findById(friendId)
-                .orElseThrow(() -> new NotFoundException(
-                        String.format("Пользователь с friendId %d не найден.", friendId)));
+        if (!userStorage.friendshipExists(userId, friendId)) {
+            log.trace("Получен запрос на удаление не существующей дружбы userId {} с friendId {}.", userId, friendId);
+            return;
+        }
 
-        user.removeFriendId(friendId);
-        friend.removeFriendId(id);
-        log.info("Пользователь с id {} удалил из друзей пользователя с friendId {}.", id, friendId);
-        return user;
+        userStorage.removeFriend(userId, friendId);
+
+        if (userStorage.friendshipExists(friendId, userId)) {
+            userStorage.updateFriend(friendId, userId, FriendStatus.PENDING);
+        }
+
+        log.info("Пользователь с id {} удалил из друзей пользователя с friendId {}.", userId, friendId);
     }
 
     @Override
@@ -99,18 +114,14 @@ public class UserServiceImplementation implements UserService {
     public List<User> findCommonFriends(Long id, Long otherId) {
         checkUserId(id);
         checkUserId(otherId);
-
-        List<User> otherFriends = userStorage.findFriends(otherId);
-        List<User> commonFriends = userStorage.findFriends(id).stream()
-                .filter(otherFriends::contains)
-                .toList();
+        List<User> commonFriends = userStorage.findCommonFriends(id, otherId);
         log.info("Список общих друзей пользователя с id {} и пользователя с otherId {} выдан.", id, otherId);
         return commonFriends;
     }
 
     @Override
     public void checkUserId(Long id) {
-        if (userStorage.findById(id).isEmpty()) {
+        if (!userStorage.existsById(id)) {
             String errorMessage = String.format("Пользователь с id %d не найден.", id);
             throw new NotFoundException(errorMessage);
         }

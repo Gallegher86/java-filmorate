@@ -1,7 +1,9 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.dal.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exceptions.MethodNotImplementedException;
+import ru.yandex.practicum.filmorate.model.FriendStatus;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
@@ -24,10 +26,12 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<User> findFriends(Long id) {
-        User user = users.get(id);
-        return users.values().stream()
-                .filter(friend -> user.getFriends().contains(friend.getId()))
-                .toList();
+        throw new MethodNotImplementedException("Метод не реализован.");
+    }
+
+    @Override
+    public List<User> findCommonFriends(Long id, Long otherId) {
+        throw new MethodNotImplementedException("Метод не реализован.");
     }
 
     @Override
@@ -41,17 +45,35 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User save(User user) {
+    public User update(User user) {
         users.put(user.getId(), user);
         log.trace("Пользователь с логином {} с id {} сохранен.", user.getLogin(), user.getId());
         return user;
     }
 
     @Override
-    public void clear() {
-        users.clear();
-        idCounter = 1L;
-        log.trace("UserStorage очищен.");
+    public void addFriend(Long userId, Long friendId, FriendStatus status) {
+        throw new MethodNotImplementedException("Метод не реализован.");
+    }
+
+    @Override
+    public void updateFriend(Long userId, Long friendId, FriendStatus status) {
+        throw new MethodNotImplementedException("Метод не реализован.");
+    }
+
+    @Override
+    public void removeFriend(Long userId, Long friendId) {
+        throw new MethodNotImplementedException("Метод не реализован.");
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        return users.containsKey(id);
+    }
+
+    @Override
+    public boolean friendshipExists(Long userId, Long friendId) {
+        throw new MethodNotImplementedException("Метод не реализован.");
     }
 
     private Long generateNextId() {
